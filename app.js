@@ -1,10 +1,10 @@
 'use strict';
 /* Chocwit Mirk Studios cartridge launcher. Replace files in /games with actual self-contained game builds. */
 const catalog = Object.freeze({
-  moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm.html',art:'assets/moonies.webp'},
-  fish:{title:'Fish Is Fish',url:'games/fish-is-fish.html',art:'assets/fish.webp'},
-  foozball:{title:'Fantasy Foozball',url:'games/fantasy-foozball.html',art:'assets/foozball.webp'},
-  looting:{title:'Looting Legends',url:'games/looting-legends.html',art:'assets/looting.webp'}
+  moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm/index.html',art:'assets/moonies.webp'},
+  fish:{title:'Fish Is Fish',url:'games/fish-is-fish/index.html',art:'assets/fish.webp'},
+  foozball:{title:'Fantasy Foozball',url:'games/fantasy-foozball/index.html',art:'assets/foozball.webp'},
+  looting:{title:'Looting Legends',url:'games/looting-legends/index.html',art:'assets/looting.webp'}
 });
 const $ = id=>document.getElementById(id);
 const desktop=$('desktopScreen'),mobile=$('mobileScreen'),status=$('status'),fullscreenBtn=$('fullscreenBtn'),ejectBtn=$('ejectBtn'),newTabBtn=$('newTabBtn');

@@ -1,0 +1,11 @@
+UPDATE INSTRUCTIONS — fish-is-fish
+
+Replace index.html in THIS folder with the latest playable HTML for this game.
+Keep the filename exactly index.html.
+
+If your game needs additional images, audio, scripts or CSS, upload those files in this same folder and preserve their relative paths.
+For example: games/fish-is-fish/assets/sound.mp3
+
+If a game uses absolute paths (starting with /), change them to relative paths when publishing in a subfolder.
+
+GitHub Pages is static hosting. Backend/server-side features will need another service.

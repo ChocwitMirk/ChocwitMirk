@@ -1,57 +1,44 @@
-# Chocwit Mirk Studios — CRT Cartridge Arcade v2
+# Chocwit Mirk Studios — CRT Cartridge Arcade V3
 
-A static website for GitHub Pages based on the approved, original Chocwit Mirk retro CRT/console art direction. The console is a fictional **Chocwit Mirk Game System**, not a Nintendo reproduction.
+## Replacing and updating games
 
-## What works
+Each cartridge launches the `index.html` file in a dedicated subfolder under `/games`.
 
-- Desktop: click any of the four cartridges under the TV.
-- Mobile: tap a large cartridge in the easy-to-tap 2-column catalog.
-- Custom cartridge-flying-to-console animation, CRT boot static, and live game frame.
-- Fullscreen TV game view, with new-tab fallback for browsers that restrict fullscreen.
-- Eject and select another game, keyboard shortcuts `1`-`4`, `F`, `E`.
-- Native phone-friendly layout, reduced-motion support, basic accessibility labels.
-- Can be installed from supported browsers as a standalone site (manifest/icons).
+| Cartridge | Upload your game here |
+|---|---|
+| Moonie’s Fun Farm | `games/moonies-fun-farm/index.html` |
+| Fish Is Fish | `games/fish-is-fish/index.html` |
+| Fantasy Foozball | `games/fantasy-foozball/index.html` |
+| Looting Legends | `games/looting-legends/index.html` |
 
-**NOTE:** The included four HTML game files are clearly marked **placeholders**, not your original finished game builds. The launcher itself is functional. Replace each placeholder with the real HTML game. If a game is multi-file, put it in its own folder, then update its `url` in `app.js`. Paths are relative; no server backend is required.
+**The included games are placeholders**, not the latest actual playable builds. To publish a real game, replace its folder's `index.html` with the latest HTML file renamed to `index.html`. If the game references sound, images, scripts, styles or other assets, put those files inside the same game folder too, preserving their relative paths.
 
-## Website files
+You do **not** need to update `app.js` or the homepage for replacements of these four games.
 
-```
-index.html               Home page
-styles.css               Layout and UI styles
-app.js                   Cartridge list and game launching
-assets/                  Licensed-to-this-project generated artwork and icons
-games/                   Four replaceable game slots
-manifest.webmanifest     App metadata
-CNAME                    Custom domain for GitHub Pages
-```
+## Uploading to GitHub
 
-## Deployment to the existing GitHub Pages website
+1. Open `https://github.com/ChocwitMirk/ChocwitMirk`. The current publishing branch is `main` and folder `/ (root)`.
+2. Replace the existing root `app.js` with the one from this package.
+3. Delete the four OLD flat game files (`games/moonies-fun-farm.html`, `games/fish-is-fish.html`, `games/fantasy-foozball.html`, `games/looting-legends.html`) if they still exist.
+4. Upload the new `games/` folders, keeping the paths shown above. If using GitHub's web uploader, drag the **four subfolders**, not just loose HTML files, onto the root upload page. Ensure GitHub shows `games/<game>/index.html` in the upload list.
+5. Commit changes to `main`. Keep the existing root `CNAME` with `chocwitmirkgames.com`.
+6. After successful Pages deployment, reload the website with Ctrl+Shift+R.
 
-1. Make a backup of the current repository first.
-2. Open the existing GitHub repository `chocwitmirk/chocwit-mirk-studios`.
-3. Upload the **contents** of this ZIP to the **repository root** (not a nested subfolder). Commit all files, ensuring `index.html`, `styles.css`, `app.js`, `CNAME`, `assets/`, and `games/` all appear at the top level.
-4. In **Settings → Pages**, keep `Deploy from a branch`, `main`, `/ (root)`.
-5. Leave the Wix DNS configuration alone if the custom domain already works. Check **Settings → Pages → Custom domain** is `chocwitmirkgames.com`; enable HTTPS after the certificate is available.
-6. Visit `https://chocwitmirkgames.com/` after publishing. On a first deploy or DNS update, propagation can take time. This package includes `CNAME` to retain the custom domain.
+**Alternative:** Upload the full V3 package contents into the repository root, replacing existing same-named files. Unused old game HTML files can be deleted separately.
 
-### Pointing at real games
+**Note:** Opening games locally through `file://` may not behave identically to GitHub Pages. Test deployed URLs directly, e.g. `https://chocwitmirkgames.com/games/fish-is-fish/`.
 
-In `app.js`, each game includes a file path:
+## Later updates
 
-```
-moonies:  { title: "Moonie's Fun Farm", url: 'games/moonies-fun-farm.html', ... }
-fish:     { title: 'Fish Is Fish',       url: 'games/fish-is-fish.html', ... }
-foozball: { title: 'Fantasy Foozball',  url: 'games/fantasy-foozball.html', ... }
-looting:  { title: 'Looting Legends',    url: 'games/looting-legends.html', ... }
-```
+For a game-only update, open that game's GitHub folder, select `index.html`, click the pencil icon to edit (if small) or use GitHub's Upload files to replace its contents. GitHub's web uploader may not overwrite a same-named existing file cleanly in every flow; GitHub Desktop is a simpler option for replacing large files. With GitHub Desktop, replace the local `index.html`, then commit and push.
 
-If a game references external CSS, JS, audio or images, preserve its relative folder layout. Verify touch controls and display scaling inside each game; the launcher cannot retrofit controls into an unrelated game's own code.
+The CRT launcher continues loading the same URL, so you do not need to change cartridge links.
 
-### Local preview
+## Files
 
-From the extracted folder, run `python -m http.server 8000` and open `http://localhost:8000/`. Running as a local server is more dependable for embedded games than opening `index.html` as a file.
-
-### Design disclaimer
-
-Original fictional console design and generated site artwork. This project does not use Nintendo names, logos, game assets, or official console trade dress. A distinct design reduces confusion but does not guarantee freedom from legal claims.
+- Root `index.html`: arcade homepage and player
+- Root `styles.css`: styling/layout
+- Root `app.js`: cartridge buttons, loading, fullscreen, eject
+- Root `CNAME`: custom domain
+- `assets/`: website graphics
+- `games/<slug>/index.html`: each playable game
