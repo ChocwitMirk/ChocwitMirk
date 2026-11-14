@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171020"><meta name="description" content="Pick a cartridge and play original games at Chocwit Mirk Studios.">
+<title>Chocwit Mirk Studios | Cartridge Arcade</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+</head><body>
+<a class="skip" href="#cartridges">Skip to cartridges</a>
+<header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></header>
+<main>
+<section class="arcade" aria-label="Interactive retro arcade gaming room">
+  <div class="desktop-scene">
+    <img src="assets/arcade-room.webp" alt="Vintage CRT television next to a custom Chocwit Mirk game console and four colorful cartridges" draggable="false" fetchpriority="high">
+    <div class="desktop-tv-screen tv-screen" id="desktopScreen" role="region" aria-label="TV game screen">
+      <div class="screen-content" id="desktopContent"><div class="idle"><div class="pixel-ghost">▦</div><strong>CHOCWIT MIRK<br>STUDIOS</strong><div class="rule"></div><p>INSERT A CARTRIDGE<br>TO PLAY</p></div></div>
+      <div class="scanlines" aria-hidden="true"></div><div class="static-effect" aria-hidden="true"></div>
+    </div>
+    <button class="scene-hit moonie-hit" data-game="moonies" aria-label="Play Moonie's Fun Farm"></button>
+    <button class="scene-hit fish-hit" data-game="fish" aria-label="Play Fish Is Fish"></button>
+    <button class="scene-hit fooz-hit" data-game="foozball" aria-label="Play Fantasy Foozball"></button>
+    <button class="scene-hit loot-hit" data-game="looting" aria-label="Play Looting Legends"></button>
+    <button class="scene-hit console-hit" id="consoleHit" aria-label="Eject game cartridge" title="Eject cartridge"></button>
+    <button class="screen-fs desktop-fs" id="desktopFullscreen" aria-label="Play in fullscreen">⛶ <span>FULLSCREEN</span></button>
+    <div class="slot-flash" aria-hidden="true"></div>
+  </div>
+  <div class="mobile-scene">
+    <div class="mobile-tv">
+      <img src="assets/tv.webp" alt="Vintage square CRT television" draggable="false">
+      <div class="mobile-tv-screen tv-screen" id="mobileScreen"><div class="screen-content" id="mobileContent"><div class="idle"><div class="pixel-ghost">▦</div><strong>CHOCWIT MIRK<br>STUDIOS</strong><div class="rule"></div><p>INSERT A CARTRIDGE<br>TO PLAY</p></div></div><div class="scanlines" aria-hidden="true"></div><div class="static-effect" aria-hidden="true"></div></div>
+    </div>
+    <div class="mobile-console"><img src="assets/console.webp" alt="Original Chocwit Mirk game system with a cartridge slot"><div class="mobile-slot-light" aria-hidden="true"></div></div>
+  </div>
+</section>
+<section class="control-strip" aria-label="Game controls"><div class="now-playing"><span class="power-dot"></span><span id="status" aria-live="polite">SYSTEM READY · SELECT A CARTRIDGE</span></div><div class="control-actions"><button id="ejectBtn" disabled>⏏ EJECT</button><button id="fullscreenBtn" disabled>⛶ FULLSCREEN</button><button id="newTabBtn" disabled>↗ OPEN GAME</button></div></section>
+<section class="library" id="cartridges" aria-labelledby="libraryTitle"><div class="library-heading"><h1 id="libraryTitle">SELECT A GAME CARTRIDGE</h1><p>Tap a cartridge to insert it into the system.</p></div>
+  <div class="mobile-cartridges" id="mobileCartridges">
+    <button class="mobile-cart" data-game="moonies"><img src="assets/moonies.webp" alt=""/><span>MOONIE'S FUN FARM</span></button>
+    <button class="mobile-cart" data-game="fish"><img src="assets/fish.webp" alt=""/><span>FISH IS FISH</span></button>
+    <button class="mobile-cart" data-game="foozball"><img src="assets/foozball.webp" alt=""/><span>FANTASY FOOZBALL</span></button>
+    <button class="mobile-cart" data-game="looting"><img src="assets/looting.webp" alt=""/><span>LOOTING LEGENDS</span></button>
+  </div>
+  <p class="desktop-helper">Click a cartridge in the scene above, or use <kbd>1</kbd>–<kbd>4</kbd> to select a game. <kbd>F</kbd> fullscreen · <kbd>E</kbd> eject.</p>
+</section>
+</main>
+<footer>© <span id="year"></span> CHOCWIT MIRK STUDIOS · ORIGINAL GAMES, ORIGINAL CONSOLE</footer>
+<dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p>Select one of the cartridges. It will load inside the TV. Use <strong>Fullscreen</strong> for a larger game view, or <strong>Open Game</strong> if your mobile browser does not allow fullscreen.</p><p>The four included screens are integration placeholders. Replace each file in the <code>games/</code> folder with your real game build to make it playable here.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js" defer></script>
+</body></html>
