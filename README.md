@@ -1,17 +1,11 @@
-# Downhill Delinquents cartridge update — Chocwit Mirk Arcade V3
+# Downhill Delinquents — integrated cartridge artwork fix
 
-This update replaces the fourth **Looting Legends** cartridge with **Downhill Delinquents** while keeping the three already working games untouched.
+This changes ONLY the fourth cartridge appearance. The artwork is baked into a replacement arcade-room image, not a CSS label overlay. Mobile gets a matching cartridge image.
 
-## Upload to GitHub
+## Install
+1. In your existing ChocwitMirk/ChocwitMirk repository, upload the **contents** of this folder to the root.
+2. Replace `index.html` and `styles.css`, and upload `assets/arcade-room.webp` and `assets/downhill.webp` to `assets/`.
+3. Commit the changes. Do not remove your existing `app.js`, `games/` or `CNAME`.
+4. Reload the site with Ctrl+Shift+R after successful GitHub Pages deployment.
 
-At https://github.com/ChocwitMirk/ChocwitMirk, upload the CONTENTS of this folder to the repository root, not the outer folder. Upload the `index.html`, `app.js`, `styles.css`, and `games/downhill-delinquents/index.html`. Existing image files in `assets/` are unchanged and do not need reuploading. Keep the original `CNAME`.
-
-**Important:** This ZIP contains ONLY launcher files and the new game's placeholder. It deliberately does not include the three other games, so it cannot overwrite your current playable builds.
-
-## Add the real game
-
-Replace `games/downhill-delinquents/index.html` with the latest working Downhill Delinquents HTML. For a self-contained build that's all you need; if it references other local files, upload those with the same relative paths.
-
-After confirming the new cartridge works, you can delete the unused `games/looting-legends/` folder. Leave the three other game folders alone.
-
-The fourth cartridge's text is drawn as an overlay atop the existing purple cartridge artwork (the actual background image has not been changed). For a completely new cartridge illustration, we'll replace that image asset in a later visual update.
+The Downhill Delinquents game URL remains `games/downhill-delinquents/` and your other games remain unchanged.
