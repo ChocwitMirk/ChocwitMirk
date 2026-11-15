@@ -11,6 +11,11 @@
 <section class="arcade" aria-label="Interactive retro arcade gaming room">
   <div class="desktop-scene">
     <img src="assets/arcade-room.webp?v=downhill-art-2" alt="Vintage CRT television next to a custom Chocwit Mirk game console and four colorful cartridges" draggable="false" fetchpriority="high">
+    <!-- Replaceable sponsored wall poster; all positioning scales with the original 1672×941 artwork. -->
+    <a class="wall-sponsor" id="wallSponsor" href="#sponsorInfo" aria-label="Advertisement: sponsor this arcade wall" title="Advertisement — Sponsor this wall">
+      <img src="assets/sponsor-poster.webp" alt="Your Game Here — Sponsor this Arcade Wall" draggable="false">
+      <span class="wall-sponsor-label">AD</span>
+    </a>
     <div class="desktop-tv-screen tv-screen" id="desktopScreen" role="region" aria-label="TV game screen">
       <div class="screen-content" id="desktopContent"><div class="idle"><div class="pixel-ghost">▦</div><strong>CHOCWIT MIRK<br>STUDIOS</strong><div class="rule"></div><p>INSERT A CARTRIDGE<br>TO PLAY</p></div></div>
       <div class="scanlines" aria-hidden="true"></div><div class="static-effect" aria-hidden="true"></div>
@@ -31,6 +36,7 @@
     <div class="mobile-console"><img src="assets/console.webp" alt="Original Chocwit Mirk game system with a cartridge slot"><div class="mobile-slot-light" aria-hidden="true"></div></div>
   </div>
 </section>
+<a class="mobile-sponsor" href="#sponsorInfo" aria-label="Advertisement: Sponsor this arcade wall"><img src="assets/sponsor-poster.webp" alt="Sponsor this arcade wall"><span>ADVERTISEMENT · SPONSOR THIS ARCADE</span></a>
 <section class="control-strip" aria-label="Game controls"><div class="now-playing"><span class="power-dot"></span><span id="status" aria-live="polite">SYSTEM READY · SELECT A CARTRIDGE</span></div><div class="control-actions"><button id="ejectBtn" disabled>⏏ EJECT</button><button id="fullscreenBtn" disabled>⛶ FULLSCREEN</button><button id="newTabBtn" disabled>↗ OPEN GAME</button></div></section>
 <section class="library" id="cartridges" aria-labelledby="libraryTitle"><div class="library-heading"><h1 id="libraryTitle">SELECT A GAME CARTRIDGE</h1><p>Tap a cartridge to insert it into the system.</p></div>
   <div class="mobile-cartridges" id="mobileCartridges">
@@ -52,7 +58,16 @@
   <div id="playerPanel" hidden><div class="player-identity"><img id="playerPhoto" alt="" referrerpolicy="no-referrer" hidden><div><strong id="playerName"></strong><small id="playerEmail"></small></div></div><p id="profileStatus" class="account-note" role="status"></p><button type="button" id="googleLogoutBtn" class="signout-button">SIGN OUT</button></div>
   <p class="account-error" id="accountError" role="alert" hidden></p>
 </dialog>
+<dialog id="sponsorInfo" class="sponsor-dialog" aria-labelledby="sponsorTitle">
+  <form method="dialog"><button class="sponsor-close" aria-label="Close sponsor details">×</button></form>
+  <p class="sponsor-kicker">ADVERTISEMENT</p><h2 id="sponsorTitle">YOUR GAME HERE</h2>
+  <p>Interested in advertising your indie game or brand on this retro arcade wall?</p>
+  <p id="sponsorContactText">Sponsorship inquiries are coming soon. The studio can add a contact address or sponsor website using the sponsor settings file.</p>
+  <a id="sponsorContactLink" class="sponsor-contact-link" href="#" hidden>CONTACT THE STUDIO</a>
+  <form method="dialog"><button class="sponsor-dismiss">BACK TO THE ARCADE</button></form>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js" defer></script>
+<script src="sponsor.js" defer></script>
 <script type="module" src="account.js"></script>
 </body></html>
