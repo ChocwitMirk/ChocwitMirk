@@ -1,11 +1,22 @@
-# Downhill Delinquents — integrated cartridge artwork fix
+# Chocwit Mirk Studios — Discord contact update
 
-This changes ONLY the fourth cartridge appearance. The artwork is baked into a replacement arcade-room image, not a CSS label overlay. Mobile gets a matching cartridge image.
+This is a one-file update for the existing sponsor wall system.
 
 ## Install
-1. In your existing ChocwitMirk/ChocwitMirk repository, upload the **contents** of this folder to the root.
-2. Replace `index.html` and `styles.css`, and upload `assets/arcade-room.webp` and `assets/downhill.webp` to `assets/`.
-3. Commit the changes. Do not remove your existing `app.js`, `games/` or `CNAME`.
-4. Reload the site with Ctrl+Shift+R after successful GitHub Pages deployment.
+1. Extract this ZIP.
+2. Visit https://github.com/ChocwitMirk/ChocwitMirk .
+3. Choose **Add file → Upload files** in the repository root.
+4. Upload **only `sponsor.js`** and commit to `main`.
+5. After GitHub Pages redeploys, refresh https://chocwitmirkgames.com with Ctrl+Shift+R.
 
-The Downhill Delinquents game URL remains `games/downhill-delinquents/` and your other games remain unchanged.
+## What changes
+- Clicking the **Your Game Here** poster still opens the sponsorship popup while no sponsor URL is configured.
+- **CONTACT THE STUDIO ON DISCORD** opens https://discord.gg/mawjuNT2dh in a new tab.
+- **JOIN OUR DISCORD** appears in the website footer.
+- No game files, account files, existing HTML, CSS, or artwork are touched.
+
+## Changing the invite
+Update `discordInvite` near the top of `sponsor.js`.
+
+## Future sponsors
+Set `sponsorUrl` to an actual sponsor link to direct poster clicks to the sponsor. That doesn't remove the independent community link. Consider a business email or private ticket workflow for confidential sponsorship proposals.
