@@ -6,7 +6,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 </head><body>
 <a class="skip" href="#cartridges">Skip to cartridges</a>
-<header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></header>
+<header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><div class="header-actions"><div class="account-menu"><button type="button" id="accountBtn" class="account-button" aria-haspopup="dialog" aria-controls="accountDialog">♙ PLAYER LOGIN</button></div><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></div></header>
 <main>
 <section class="arcade" aria-label="Interactive retro arcade gaming room">
   <div class="desktop-scene">
@@ -44,6 +44,15 @@
 </main>
 <footer>© <span id="year"></span> CHOCWIT MIRK STUDIOS · ORIGINAL GAMES, ORIGINAL CONSOLE</footer>
 <dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p>Select one of the cartridges. It will load inside the TV. Use <strong>Fullscreen</strong> for a larger game view, or <strong>Open Game</strong> if your mobile browser does not allow fullscreen.</p><p>Each cartridge loads its own game folder. Update a game by replacing the <code>index.html</code> inside its folder.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
+<dialog id="accountDialog" class="account-dialog" aria-labelledby="accountTitle">
+  <form method="dialog"><button class="account-close" aria-label="Close player account">×</button></form>
+  <div class="account-header"><span class="account-icon">▦</span><h2 id="accountTitle">PLAYER ACCOUNT</h2><p id="accountSubtitle">Play as a guest or sign in to your arcade profile.</p></div>
+  <div id="accountSetup" class="account-setup" hidden>Google login is not connected yet. Add your Firebase web-app configuration to <code>firebase-config.js</code> before publishing.</div>
+  <div id="guestPanel"><button type="button" id="googleLoginBtn" class="google-login"><span aria-hidden="true" class="google-g">G</span> CONTINUE WITH GOOGLE</button><p class="account-note">Google handles your password. Guest play remains available without signing in.</p></div>
+  <div id="playerPanel" hidden><div class="player-identity"><img id="playerPhoto" alt="" referrerpolicy="no-referrer" hidden><div><strong id="playerName"></strong><small id="playerEmail"></small></div></div><p id="profileStatus" class="account-note" role="status"></p><button type="button" id="googleLogoutBtn" class="signout-button">SIGN OUT</button></div>
+  <p class="account-error" id="accountError" role="alert" hidden></p>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js" defer></script>
+<script type="module" src="account.js"></script>
 </body></html>
