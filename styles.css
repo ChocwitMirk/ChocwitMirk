@@ -4,3 +4,11 @@
 @media (min-width:801px) and (max-width:1100px){.control-strip{padding:12px}.now-playing{font-size:11px}.control-actions button{font-size:10px;padding:9px}.brand-tag{display:none}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
 /* Enlarged game fills fullscreen container with no crop */
 .tv-screen:fullscreen,.tv-screen:-webkit-full-screen{width:100vw!important;height:100dvh!important;left:0!important;top:0!important;border-radius:0!important;transform:none!important;background:#000!important}.tv-screen:fullscreen .screen-content,.tv-screen:-webkit-full-screen .screen-content{background:#000}.tv-screen:fullscreen:after,.tv-screen:-webkit-full-screen:after,.tv-screen:fullscreen .scanlines,.tv-screen:-webkit-full-screen .scanlines{display:none}
+
+/* Downhill Delinquents fourth cartridge: new title sticker over the original scene art. */
+.downhill-sticker{position:absolute;left:74.6%;top:76.2%;width:11.7%;height:7.4%;z-index:8;pointer-events:none;display:grid;place-items:center;transform:rotate(-1deg);border-radius:5px;background:linear-gradient(145deg,#30215a,#160e37 75%);border:2px solid #7650a7;box-shadow:0 0 0 2px #21123b,0 3px 5px #000a;text-align:center;}
+.downhill-sticker span{font-family:Impact,'Arial Black',sans-serif;font-weight:900;letter-spacing:.025em;font-size:clamp(8px,1.35vw,20px);line-height:.95;color:#ffd369;text-shadow:2px 2px #ad3a65,-1px -1px #101025;}
+.downhill-mobile-art{display:block;position:relative;width:100%;max-width:225px;}
+.downhill-mobile-art img{width:100%;max-width:none;}
+.downhill-mobile-sticker{position:absolute;left:19%;top:29%;width:63%;height:39%;background:linear-gradient(145deg,#30215a,#160e37);border:2px solid #7650a7;border-radius:5px;display:grid;place-items:center;color:#ffd369;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(11px,3vw,18px)!important;font-weight:900;line-height:1;text-shadow:2px 2px #ad3a65;text-align:center;transform:rotate(-1deg);}
+@media(max-width:800px){.downhill-sticker{display:none}}

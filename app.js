@@ -4,7 +4,7 @@ const catalog = Object.freeze({
   moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm/index.html',art:'assets/moonies.webp'},
   fish:{title:'Fish Is Fish',url:'games/fish-is-fish/index.html',art:'assets/fish.webp'},
   foozball:{title:'Fantasy Foozball',url:'games/fantasy-foozball/index.html',art:'assets/foozball.webp'},
-  looting:{title:'Looting Legends',url:'games/looting-legends/index.html',art:'assets/looting.webp'}
+  downhill:{title:'Downhill Delinquents',url:'games/downhill-delinquents/index.html',art:'assets/looting.webp'}
 });
 const $ = id=>document.getElementById(id);
 const desktop=$('desktopScreen'),mobile=$('mobileScreen'),status=$('status'),fullscreenBtn=$('fullscreenBtn'),ejectBtn=$('ejectBtn'),newTabBtn=$('newTabBtn');
@@ -32,8 +32,8 @@ document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click',(
 $('consoleHit').addEventListener('click',()=>current?eject():toast('Choose a cartridge below'));
 $('desktopFullscreen').addEventListener('click',fullscreen);fullscreenBtn.addEventListener('click',fullscreen);ejectBtn.addEventListener('click',eject);newTabBtn.addEventListener('click',openGame);
 $('helpBtn').addEventListener('click',()=>$('helpDialog').showModal());$('closeHelp').addEventListener('click',()=>$('helpDialog').close());$('year').textContent=new Date().getFullYear();
-document.addEventListener('keydown',event=>{const t=event.target;if(t?.matches('input, textarea, select')||$('helpDialog').open)return;const keys=['moonies','fish','foozball','looting'];if(/^[1-4]$/.test(event.key))selectGame(keys[Number(event.key)-1],document.querySelector(`[data-game="${keys[Number(event.key)-1]}"]`));else if(event.key.toLowerCase()==='f'&&current)fullscreen();else if(event.key.toLowerCase()==='e'&&current)eject()});
+document.addEventListener('keydown',event=>{const t=event.target;if(t?.matches('input, textarea, select')||$('helpDialog').open)return;const keys=['moonies','fish','foozball','downhill'];if(/^[1-4]$/.test(event.key))selectGame(keys[Number(event.key)-1],document.querySelector(`[data-game="${keys[Number(event.key)-1]}"]`));else if(event.key.toLowerCase()==='f'&&current)fullscreen();else if(event.key.toLowerCase()==='e'&&current)eject()});
 const onLayoutChange=()=>{if(current&&gameFrame.isConnected){const content=activeContent();content.querySelector('.idle').hidden=true;content.append(gameFrame);for(const id of ['desktopContent','mobileContent'])if($(id)!==content)$(id).querySelector('.idle').hidden=false;toast('Layout changed — game reloaded')}};
 if(mq.addEventListener)mq.addEventListener('change',onLayoutChange);else mq.addListener(onLayoutChange);
-// Direct-link selections: #moonies, #fish, #foozball, #looting
+// Direct-link selections: #moonies, #fish, #foozball, #downhill
 const deepLink=location.hash.slice(1).toLowerCase();if(catalog[deepLink])selectGame(deepLink,document.querySelector(`[data-game="${deepLink}"]`));
