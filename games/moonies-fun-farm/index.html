@@ -1239,7 +1239,7 @@ fspot('the reeds',reeds(16.2,11.5),16.2,11.5,1,1,[16.4,0,11.9],[16.9,0,12.2],[17
 fspot('the apple tree',tree(-26,12,1.2,true),-26,12,.72,1,[-26,3.6,12],[-26,4.6,12.9],[-24.4,0,12.6]);
 fspot('the cornfield',null,12,-15,1,3,[12.3,0,-15.5],[12.3,0,-14.2],[12,0,-10.8]);
 fspot('the cornfield',null,18.6,-20,1,3,[18.6,0,-20],[17.4,0,-19.4],[16,0,-11]);
-fspot('the silo',null,-3.5,-11.8,1,2,[-5.1,0,-13.3],[-5.6,0,-12.2],[-2,0,-10.8]);
+fspot('the silo',null,-3.5,-14,2.0,2,[-5.1,0,-13.3],[-5.6,0,-12.2],[-2,0,-10.8]);
 
 /* ================= BACKROOMS (secret) ================= */
 /* ---------- playground: slide, trampoline, beach ball + goal ---------- */
@@ -3366,7 +3366,7 @@ function endPointer(e){
   if(SEESAW.drag&&SEESAW.drag.id===e.pointerId){SEESAW.drag=null;SEESAW.g.position.y=0;canvas.style.cursor='';voice({type:'sine',f0:180,f1:110,dur:.15,vol:.15});return;}
   if(SLIDE.drag&&SLIDE.drag.id===e.pointerId){SLIDE.drag=null;SLIDE.g.position.y=0;canvas.style.cursor='';voice({type:'sine',f0:180,f1:110,dur:.15,vol:.15});return;}
   if(TRAMP.drag&&TRAMP.drag.id===e.pointerId){TRAMP.drag=null;TRAMP.g.position.y=0;canvas.style.cursor='';voice({type:'sine',f0:180,f1:110,dur:.15,vol:.15});return;}
-  if(stick.id===e.pointerId){stick.id=null;stick.x=stick.y=0;$('knob').style.transform='';
+  if(stick.id===e.pointerId){stick.id=null;stick.x=stick.y=0;$('knob').style.transform='';if((stick.mv||0)>=10)stick.endT=performance.now();
     if((stick.mv||0)<10&&performance.now()-(stick.t0||0)<350&&state==='play'&&(mode==='hub'||mode==='hide'))clickAt(e.clientX,e.clientY); // a quick tap on the left side still taps things
     return;}
   if(lookTouch&&lookTouch.id===e.pointerId){lookTouch=null;return;}
@@ -3374,7 +3374,9 @@ function endPointer(e){
   if(drag&&drag.id===e.pointerId){if(drag.moved<=6&&state==='play'&&(mode==='hub'||mode==='hide'))clickAt(e.clientX,e.clientY);drag=null;}}
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
 canvas.addEventListener('wheel',e=>{if(mode==='paint'&&state==='play'){e.preventDefault();const n=performance.now();if(n-(paint.wheelT||0)>90){paint.wheelT=n;setPaintColor(paint.sel+(e.deltaY>0?1:-1));}return;}if(mode==='race')return;const[a,b]=level==='farm'?[7,18]:[2.8,7];camDist=clamp(camDist+e.deltaY*(level==='farm'?.01:.005),a,b);e.preventDefault();},{passive:false});
-function clickAt(x,y){if(TRACTOR.driving)return;mv2.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(mv2,cam);
+function clickAt(x,y){if(TRACTOR.driving)return;
+  // while the touch stick is steering Moonie (and just after), taps don't send her walking somewhere else
+  if((stick.id!==null&&(stick.mv||0)>=10)||performance.now()-(stick.endT||0)<450)return;mv2.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(mv2,cam);
   let spot=null,target=null;const p=new THREE.Vector3();
   if(mode==='hide'){const objs=SPOTS.filter(s=>s.obj).map(s=>s.obj);const hit=ray.intersectObjects(objs,true)[0];
     if(hit){let o=hit.object;while(o.parent&&!objs.includes(o))o=o.parent;spot=SPOTS.find(s=>s.obj===o)||null;}}
@@ -3386,7 +3388,7 @@ function clickAt(x,y){if(TRACTOR.driving)return;mv2.set(x/innerWidth*2-1,-(y/inn
     if(mode==='hub'&&!BB.held&&!FISH.rod&&!duckCarry&&!FOOD.held){const dk=DUCKS.find(d=>d.state==='hidden'&&Math.hypot(p.x-d.x,p.z-d.z)<1),fd=FOOD.items.find(f=>Math.hypot(p.x-f.x,p.z-f.z)<1);if(dk){spot=dk.spot;target=new THREE.Vector3(dk.x,0,dk.z);}
       else if(fd){spot=fd.spot;target=new THREE.Vector3(fd.x,0,fd.z);}
       else if(Math.hypot(p.x-ROD_STAND.x,p.z-ROD_STAND.z)<1.2){spot=ROD_TAKE;target=new THREE.Vector3(ROD_STAND.x,0,ROD_STAND.z+.2);}}
-    if(mode==='hide'){spot=SPOTS.find(s=>!s.obj&&Math.hypot(s.x-p.x,s.z-p.z)<2)||null;if(spot)target=new THREE.Vector3(spot.x,0,spot.z);}
+    if(mode==='hide'){spot=SPOTS.find(s=>!s.obj&&Math.hypot(s.x-p.x,s.z-p.z)<Math.max(2,s.r+1.5))||null;if(spot)target=new THREE.Vector3(spot.x,0,spot.z);}
     if(level==='farm'&&mode==='hub'&&Math.hypot(p.x-OUTHOUSE.x,p.z-OUTHOUSE.z)<2){target=new THREE.Vector3(OUTHOUSE.x,0,OUTHOUSE.z);spot='outhouse';}
     if(mode==='hub'){const st=STATIONS.find(s=>Math.hypot(s.x-p.x,s.z-p.z)<1);if(st){spot={station:st};target=new THREE.Vector3(st.x,0,st.z);}}}
   if(!target)return;
