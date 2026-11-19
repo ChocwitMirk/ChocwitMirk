@@ -382,6 +382,11 @@ body.hasBarn #tray{max-width:calc(100vw - 280px)}
 #kpOpts,#kpColors,.kptop{flex:none}
 #kpWrap{position:relative;width:min(calc(100vw - 120px),calc((100vh - 226px) * 10 / 7),1000px);aspect-ratio:10/7;border:4px solid var(--ink);border-radius:6px;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.3);touch-action:none;cursor:crosshair}
 #kpWrap canvas{position:absolute;inset:0;width:100%;height:100%}
+#kpPuzzle{position:absolute;inset:0;z-index:5;background:#8f8fa6 repeating-linear-gradient(45deg,#9a9ab1 0 10px,#8f8fa6 10px 20px)}
+#pzCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.pzTop{position:absolute;left:0;right:0;top:calc(8px + env(safe-area-inset-top,0px));display:flex;gap:8px;align-items:center;justify-content:space-between;padding:0 10px;pointer-events:none}
+.pzTop .gbtn{pointer-events:auto}#pzMsg{font:clamp(16px,3.4vmin,26px)/1.1 var(--display);color:#fff;text-shadow:0 3px 0 var(--ink),0 0 5px var(--ink);text-align:center}
+#pzDone{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:20px}
 #kpLines,#kpFx{pointer-events:none}
 #kpWrap.shake{animation:kshake .5s}
 @keyframes kshake{10%,50%,90%{transform:translate(-8px,4px) rotate(-1deg)}30%,70%{transform:translate(8px,-4px) rotate(1deg)}}
@@ -847,11 +852,14 @@ body.hasBarn #poopHud{left:calc(max(16px,env(safe-area-inset-left,0px)) + 78px)}
 </div>
 <div class="hud full" id="colorUI" hidden>
   <div class="kptop"><div class="kplogo"><span>M</span><span>o</span><span>o</span> <span>Pix</span></div>
-    <button class="gbtn" id="kpPage">New page</button><button class="gbtn" id="kpUndo">Uh oh!</button><button class="gbtn" id="kpPrint">Print</button><button class="gbtn go" id="kpHang">Hang it in the barn</button><button class="gbtn" id="kpFarm">Back to the farm</button></div>
+    <button class="gbtn" id="kpPage">New page</button><button class="gbtn" id="kpUndo">Uh oh!</button><button class="gbtn" id="kpPrint">Print</button><button class="gbtn" id="kpCut">Puzzle</button><button class="gbtn go" id="kpHang">Hang it in the barn</button><button class="gbtn" id="kpFarm">Back to the farm</button></div>
   <div class="kpmid"><div id="kpTools"></div>
     <div id="kpWrap"><canvas id="kpPaint" width="1000" height="700"></canvas><canvas id="kpLines" width="1000" height="700"></canvas><canvas id="kpFx" width="1000" height="700"></canvas></div></div>
   <div id="kpOpts"></div>
   <div id="kpColors"></div>
+  <div id="kpPuzzle" hidden><canvas id="pzCanvas"></canvas>
+    <div class="pzTop"><button class="gbtn" id="pzBack">Back to coloring</button><div id="pzMsg"></div><button class="gbtn" id="pzAgain">Cut again</button></div>
+    <button class="gbtn go" id="pzDone" hidden>Yay! Back to coloring</button></div>
 </div>
 <div id="padCursor" hidden></div>
 <div class="hud" id="snapUI" hidden>
@@ -2496,6 +2504,7 @@ const ICON_PATHS={
  paw:'<ellipse cx="12" cy="15.5" rx="4.3" ry="3.6" fill="currentColor"/><circle cx="5.5" cy="10" r="2" fill="currentColor"/><circle cx="9.5" cy="5.5" r="2" fill="currentColor"/><circle cx="14.5" cy="5.5" r="2" fill="currentColor"/><circle cx="18.5" cy="10" r="2" fill="currentColor"/>',
  swap:'<path d="M4 8h15l-4-4M20 16H5l4 4"/>',
  page:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+ puzzle:'<path d="M5 8h3.5a2 2 0 1 1 4 0H16v3.5a2 2 0 1 1 0 4V19h-3.5a2 2 0 1 0-4 0H5v-3.5a2 2 0 1 0 0-4z"/>',
  printer:'<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z" fill="#fff"/><path d="M9.5 17h5M9.5 19h3" stroke-width="1.6"/><circle cx="17.5" cy="11.6" r=".9" fill="currentColor" stroke="none"/>',
  undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
  frame:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l4-4 4 4"/><path d="M6 17l4-5 3 3 2-2 3 4"/>',
@@ -2598,6 +2607,9 @@ void main(){vec3 base=texture2D(map,vUv).rgb;vec3 n=normalize(vN);if(!gl_FrontFa
 float d=dot(n,normalize(lightDir));float w=max(fwidth(d)*1.5,0.02);
 float band=mix(0.8,1.0,smoothstep(-0.08-w,-0.08+w,d));
 float rim=smoothstep(0.62,0.7,1.0-max(dot(n,normalize(vV)),0.0))*step(-0.1,d)*0.1;
+// the cel band only shows on her white fur: the brown spots (the circles on her tummy) and the pink nose/ears stay flat and clean
+float lum=dot(base,vec3(0.299,0.587,0.114)),sat=max(base.r,max(base.g,base.b))-min(base.r,min(base.g,base.b));
+float flatM=1.0-smoothstep(0.6,0.74,lum)*(1.0-smoothstep(0.18,0.3,sat));band=mix(band,1.0,flatM);rim*=1.0-flatM;
 gl_FragColor=vec4(base*band*tint*min(bright,1.15)+rim,1.0);}`});}
 function celSkinMat(map){return new THREE.ShaderMaterial({skinning:true,side:THREE.DoubleSide,extensions:{derivatives:true},
   uniforms:{map:{value:map},lightDir:celU.lightDir,tint:celU.tint,bright:celU.bright},
@@ -3537,6 +3549,66 @@ function kpDynTick(dt){const D=KP.dyn,f=KP.fx;D.t+=dt;f.clearRect(0,0,1000,700);
   if(k>1.1){KP.dyn=null;f.clearRect(0,0,1000,700);}}
 // print: build a big (2000x1400) picture of the blank page or the coloured one and hand it over as a PNG to print
 function kpColorThumb(){const t=document.createElement('canvas');t.width=120;t.height=84;const x=t.getContext('2d');x.drawImage(KP.paint.canvas,0,0,120,84);x.drawImage(KP.lines.canvas,0,0,120,84);return t.toDataURL();}
+/* ---------- Moo Pix puzzle cutter: cut your picture into a jigsaw (8 pieces the first time, 16 the next, then 8 again…) ---------- */
+const PZ={on:false,cuts:0,pieces:[],img:null,cols:4,rows:2,drag:null,done:false,s:1,ox:0,oy:0,dpr:1,raf:0,conf:[]};
+function pzPath(p,tw,th){ // jigsaw outline of one piece in picture units, (0,0)=piece corner
+  const P=new Path2D(),w=tw,h=th,k=Math.min(w,h);
+  const edge=(x0,y0,x1,y1,sgn)=>{ // straight edge with a knob in the middle when sgn!=0 (knob bulges to the left of travel*sgn)
+    if(!sgn){P.lineTo(x1,y1);return;}const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=uy*sgn,ny=-ux*sgn,pt=(a,b)=>[x0+ux*a+nx*b,y0+uy*a+ny*b];
+    const a=L/2,nk=k*.22,nw=k*.13,q=[[a-nw*1.1,0],[a-nw*.9,nk*.25],[a-nw*1.5,nk*.55],[a-nw*1.3,nk],[a,nk*1.05],[a+nw*1.3,nk],[a+nw*1.5,nk*.55],[a+nw*.9,nk*.25],[a+nw*1.1,0]];
+    P.lineTo(...pt(q[0][0],q[0][1]));P.bezierCurveTo(...pt(...q[1]),...pt(...q[2]),...pt(...q[3]));P.bezierCurveTo(...pt(a-nw*1.1,nk*1.25),...pt(a+nw*1.1,nk*1.25),...pt(...q[5]));
+    P.bezierCurveTo(...pt(...q[6]),...pt(...q[7]),...pt(...q[8]));P.lineTo(x1,y1);};
+  P.moveTo(0,0);edge(0,0,w,0,p.top);edge(w,0,w,h,p.right);edge(w,h,0,h,p.bottom);edge(0,h,0,0,p.left);P.closePath();return P;}
+function pzStart(){if(PZ.on)return;audio();PZ.cuts++;const n=PZ.cuts%2?8:16;PZ.cols=4;PZ.rows=n===8?2:4;
+  const big=kpPrintCanvas('color'),c=document.createElement('canvas');c.width=1000;c.height=700;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(big,0,0,1000,700);PZ.img=c;
+  const C=PZ.cols,R=PZ.rows,tw=1000/C,th=700/R,H=[],V=[];
+  for(let r=0;r<R;r++){H[r]=[];V[r]=[];for(let q=0;q<C;q++){H[r][q]=Math.random()<.5?1:-1;V[r][q]=Math.random()<.5?1:-1;}}
+  PZ.pieces=[];for(let r=0;r<R;r++)for(let q=0;q<C;q++){
+    // edge knobs: a neighbour shares the edge with the opposite sign so the pieces lock together
+    const p={r,q,tw,th,top:r?-H[r-1][q]:0,bottom:r<R-1?H[r][q]:0,left:q?-V[r][q-1]:0,right:q<C-1?V[r][q]:0,hx:q*tw,hy:r*th,x:0,y:0,placed:false,z:0};
+    p.path=pzPath(p,tw,th);PZ.pieces.push(p);}
+  PZ.on=true;PZ.done=false;PZ.drag=null;PZ.conf=[];$('kpPuzzle').hidden=false;$('pzMsg').textContent=`${n} pieces — drag them into the frame!`;$('pzDone').hidden=true;
+  pzLayout(true);kpSnd('tool');voice({type:'triangle',f0:300,f1:900,dur:.25,vol:.1});pzLoop();}
+function pzLayout(scatter){const cv=$('pzCanvas'),r=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);PZ.dpr=d;cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);
+  const W=r.width,H=r.height,s=Math.min(W*.6/1000,H*.58/700);PZ.s=s;PZ.ox=(W-1000*s)/2;PZ.oy=(H-700*s)/2+10;PZ.W=W;PZ.H=H;
+  // piece pictures at this size (with room for the knobs)
+  for(const p of PZ.pieces){const m=Math.min(p.tw,p.th)*.32,c=document.createElement('canvas');c.width=Math.ceil((p.tw+2*m)*s*d);c.height=Math.ceil((p.th+2*m)*s*d);
+    const x=c.getContext('2d');x.scale(s*d,s*d);x.translate(m,m);x.save();x.clip(p.path);x.drawImage(PZ.img,-p.hx,-p.hy);x.restore();
+    x.lineWidth=2.4/s;x.strokeStyle='rgba(255,255,255,.75)';x.stroke(p.path);x.lineWidth=1.2/s;x.strokeStyle='rgba(43,33,24,.75)';x.stroke(p.path);p.bmp=c;p.m=m;}
+  if(scatter){const board={x0:PZ.ox,y0:PZ.oy,x1:PZ.ox+1000*s,y1:PZ.oy+700*s};let z=0;
+    for(const p of PZ.pieces.sort(()=>Math.random()-.5)){const pw=p.tw*s,ph=p.th*s;let best=null;
+      for(let k=0;k<40;k++){const sx=rnd(6,W-pw-6),sy=rnd(60,H-ph-6),out=sx+pw<board.x0||sx>board.x1||sy+ph<board.y0||sy>board.y1;best=[sx,sy];if(out)break;}
+      p.x=(best[0]-PZ.ox)/s;p.y=(best[1]-PZ.oy)/s;p.z=z++;}}}
+function pzDraw(){const cv=$('pzCanvas'),x=cv.getContext('2d'),s=PZ.s,d=PZ.dpr;x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,PZ.W,PZ.H);
+  // the frame: white board, faint picture to help, dashed piece slots
+  x.save();x.translate(PZ.ox,PZ.oy);x.fillStyle='rgba(0,0,0,.25)';x.fillRect(4,8,1000*s,700*s);x.fillStyle='#fff';x.fillRect(0,0,1000*s,700*s);
+  x.globalAlpha=.16;x.drawImage(PZ.img,0,0,1000*s,700*s);x.globalAlpha=1;x.scale(s,s);x.setLineDash([8,6]);x.lineWidth=1.5/s;x.strokeStyle='rgba(43,33,24,.3)';
+  for(const p of PZ.pieces){x.save();x.translate(p.hx,p.hy);x.stroke(p.path);x.restore();}x.setLineDash([]);x.restore();
+  x.lineWidth=5;x.strokeStyle='#2b2118';x.strokeRect(PZ.ox,PZ.oy,1000*s,700*s);
+  const L=PZ.pieces.slice().sort((a,b)=>(a.placed===b.placed?a.z-b.z:a.placed?-1:1));
+  for(const p of L){const dr=PZ.drag&&PZ.drag.p===p,sx=PZ.ox+(p.x-p.m)*s,sy=PZ.oy+(p.y-p.m)*s,bw=p.bmp.width/d,bh=p.bmp.height/d;
+    x.save();if(dr){x.translate(sx+bw/2,sy+bh/2);x.scale(1.06,1.06);x.translate(-bw/2,-bh/2);x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=14;x.shadowOffsetY=8;x.drawImage(p.bmp,0,0,bw,bh);}
+    else{if(!p.placed){x.shadowColor='rgba(0,0,0,.25)';x.shadowBlur=4;x.shadowOffsetY=3;}x.drawImage(p.bmp,sx,sy,bw,bh);}x.restore();}
+  for(const c of PZ.conf){x.save();x.translate(c.x,c.y);x.rotate(c.a);x.fillStyle=c.col;x.fillRect(-5,-3,10,6);x.restore();}}
+function pzLoop(){if(!PZ.on)return;for(const c of PZ.conf){c.vy+=.25;c.x+=c.vx;c.y+=c.vy;c.a+=c.va;}PZ.conf=PZ.conf.filter(c=>c.y<PZ.H+20);pzDraw();if(PZ.conf.length||PZ.drag||!PZ.done)PZ.raf=requestAnimationFrame(pzLoop);}
+function pzAt(e){const r=$('pzCanvas').getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];}
+function pzHit(sx,sy){const x=$('pzCanvas').getContext('2d'),s=PZ.s,L=PZ.pieces.filter(p=>!p.placed).sort((a,b)=>b.z-a.z);
+  for(const p of L){x.setTransform(s,0,0,s,PZ.ox+p.x*s,PZ.oy+p.y*s);const hit=x.isPointInPath(p.path,sx,sy)||(sx>PZ.ox+p.x*s-6&&sx<PZ.ox+(p.x+p.tw)*s+6&&sy>PZ.oy+p.y*s-6&&sy<PZ.oy+(p.y+p.th)*s+6);x.setTransform(1,0,0,1,0,0);if(hit)return p;}return null;}
+function pzDown(e){if(!PZ.on||PZ.done||PZ.drag)return;e.preventDefault();const[sx,sy]=pzAt(e),p=pzHit(sx,sy);if(!p)return;
+  PZ.drag={p,id:e.pointerId,dx:sx-(PZ.ox+p.x*PZ.s),dy:sy-(PZ.oy+p.y*PZ.s)};p.z=Math.max(...PZ.pieces.map(q=>q.z))+1;$('pzCanvas').setPointerCapture(e.pointerId);
+  voice({type:'triangle',f0:520,f1:620,dur:.05,vol:.07});cancelAnimationFrame(PZ.raf);pzLoop();}
+function pzMove(e){const D=PZ.drag;if(!D||D.id!==e.pointerId)return;const[sx,sy]=pzAt(e);D.p.x=(sx-D.dx-PZ.ox)/PZ.s;D.p.y=(sy-D.dy-PZ.oy)/PZ.s;}
+function pzUp(e){const D=PZ.drag;if(!D||D.id!==e.pointerId)return;PZ.drag=null;const p=D.p,snap=Math.min(p.tw,p.th)*.3;
+  if(Math.hypot(p.x-p.hx,p.y-p.hy)<snap){p.x=p.hx;p.y=p.hy;p.placed=true;voice({type:'sine',f0:660,f1:990,dur:.12,vol:.12});
+    const left=PZ.pieces.filter(q=>!q.placed).length;$('pzMsg').textContent=left?`${left} to go!`:'You did it!';
+    if(!left){PZ.done=true;SFX.win&&SFX.win();say('You did it!');$('pzDone').hidden=false;
+      for(let i=0;i<120;i++)PZ.conf.push({x:PZ.W/2+rnd(-60,60),y:PZ.H*.45,vx:rnd(-9,9),vy:rnd(-14,-4),a:rnd(0,6),va:rnd(-.3,.3),col:['#e0393a','#ffd23f','#3d7be0','#5ac44a','#ff8fb1','#a66bff'][i%6]});}}
+  else voice({type:'triangle',f0:440,f1:380,dur:.05,vol:.05});
+  cancelAnimationFrame(PZ.raf);pzLoop();}
+function pzClose(){PZ.on=false;PZ.drag=null;cancelAnimationFrame(PZ.raf);$('kpPuzzle').hidden=true;}
+(function pzInit(){const cv=$('pzCanvas');cv.addEventListener('pointerdown',pzDown);cv.addEventListener('pointermove',pzMove);cv.addEventListener('pointerup',pzUp);cv.addEventListener('pointercancel',pzUp);
+  $('kpCut').onclick=pzStart;$('pzBack').onclick=()=>{audio();pzClose();};$('pzDone').onclick=()=>{audio();pzClose();};$('pzAgain').onclick=()=>{audio();pzClose();pzStart();};
+  addEventListener('resize',()=>{if(PZ.on){pzLayout(false);if(PZ.done)pzDraw();}});})();
 function kpPrintCanvas(kind){const c=document.createElement('canvas');c.width=2000;c.height=1400;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,2000,1400);
   if(kind==='color'){x.imageSmoothingQuality='high';x.drawImage(KP.paint.canvas,0,0,2000,1400);}
   const im=KP_IMG[KP.page]&&kpImg(KP.page);if(im&&im.complete&&im.naturalWidth)x.drawImage(im,0,0,2000,1400);
@@ -4429,7 +4501,7 @@ function placeFriendsRoaming(spread){FRIENDS.forEach((f,i)=>{const a=i/FRIENDS.l
   if(hp)f.obj.position.set(hp.x,0,hp.z);else f.obj.position.set(Math.cos(a)*r,0,4+Math.sin(a)*r*.8);resolve(f.obj.position,.4);f.state='roam';f.obj.visible=true;f.roam=null;});}
 function resetMoonie(x,z,yaw){const m=moonie;m.pos.set(x,0,z);m.vel.set(0,0,0);m.yaw=yaw;m.y=0;m.vy=0;m.onGround=true;m.action=null;m.trail=[];m.happy=0;m.root.visible=true;clickPath=null;marker.visible=false;}
 function fadeTo(msg,fn,ms=900){const f=$('fade');f.textContent=msg||'';f.classList.add('on');state='warp';setTimeout(()=>{fn();setTimeout(()=>f.classList.remove('on'),300);},ms);}
-function cleanupMode(){if(mode==='snap')snapCleanup();if(mode==='says')saysCleanup();FRIENDS.forEach(f=>{stuffEnd(f,true);if(f.nap)napWake(f);});poopCleanup();bbDrop();duckDrop();fishDropAll();foodDrop();if(TRACTOR.driving)stopDrive();BUSTED.slice().forEach(f=>unbust(f,true));try{voiceStop();}catch(e){}SLIDE.drag=null;SEESAW.drag=null;if(SEESAW.carry){SEESAW.carry=false;SEESAW.g.position.y=0;}FRIENDS.forEach(f=>{f.ss=null;if(f.launch){f.launch=null;f.obj.position.y=0;f.obj.rotation.x=0;}});try{speechSynthesis.cancel();}catch(e){}if(mode==='paint'&&state!=='end')unpaintFriends();clearMarkers();gun.visible=false;moonie.root.visible=true;$('cross').hidden=true;if(document.pointerLockElement)document.exitPointerLock();paint.fire=false;bubbles.forEach(b=>b.el.remove());bubbles.length=0;$('bigText').hidden=true;$('padCursor').hidden=true;if(KP.down)kpUp();}
+function cleanupMode(){if(PZ.on)pzClose();if(mode==='snap')snapCleanup();if(mode==='says')saysCleanup();FRIENDS.forEach(f=>{stuffEnd(f,true);if(f.nap)napWake(f);});poopCleanup();bbDrop();duckDrop();fishDropAll();foodDrop();if(TRACTOR.driving)stopDrive();BUSTED.slice().forEach(f=>unbust(f,true));try{voiceStop();}catch(e){}SLIDE.drag=null;SEESAW.drag=null;if(SEESAW.carry){SEESAW.carry=false;SEESAW.g.position.y=0;}FRIENDS.forEach(f=>{f.ss=null;if(f.launch){f.launch=null;f.obj.position.y=0;f.obj.rotation.x=0;}});try{speechSynthesis.cancel();}catch(e){}if(mode==='paint'&&state!=='end')unpaintFriends();clearMarkers();gun.visible=false;moonie.root.visible=true;$('cross').hidden=true;if(document.pointerLockElement)document.exitPointerLock();paint.fire=false;bubbles.forEach(b=>b.el.remove());bubbles.length=0;$('bigText').hidden=true;$('padCursor').hidden=true;if(KP.down)kpUp();}
 function goHub(){audio();cleanupMode();refreshBoards();unpaintFriends();setLevel('farm');mode='hub';state='play';resetFriendsTo('roam');placeFriendsRoaming(false);resetMoonie(-11.4,-2.2,Math.PI);camYaw=.25;camDist=11;if(MIX.dirty!==false){spawnMixes();MIX.dirty=false;}
   for(const id of['title','end','pause','intro'])$(id).hidden=true;hud(['hubHint','pauseBtn']);touchUI();canvas.focus();}
 function backToFarm(){$('pause').hidden=true;$('end').hidden=true;$('intro').hidden=true;if(KP.down)kpUp();fadeTo('Back to the farm…',()=>{goHub();setTimeout(()=>greetMaybe(.2),600);},700);}
@@ -5503,7 +5575,7 @@ $('farmBtn1').onclick=backToFarm;$('farmBtn2').onclick=backToFarm;
 $('introStart').onclick=beginActivity;
 document.querySelectorAll('.tbi').forEach(s=>{s.outerHTML=icon(s.dataset.i);});setSearchAct('use');
 [['startBtn','play'],['introStart','play'],['introBack','close'],['resumeBtn','play'],['restartBtn','again'],['farmBtn1','barn'],['farmBtn2','barn'],['againBtn','again'],['gamesClose','walk'],
- ['tNew','again'],['tChange','swap'],['tFarm','barn'],['tFarm2','barn'],['mRandom','dice'],['mKeep','paw'],['mFarm','barn'],['kpPage','page'],['kpUndo','undo'],['kpPrint','printer'],['kpHang','frame'],['kpFarm','barn'],['abcHear','speaker'],['abcFarm','barn'],['cntHear','speaker'],['cntFarm','barn'],['fsTitle','full'],['fsPause','full'],['fsRotate','full'],['tallBtn','close']]
+ ['tNew','again'],['tChange','swap'],['tFarm','barn'],['tFarm2','barn'],['mRandom','dice'],['mKeep','paw'],['mFarm','barn'],['kpPage','page'],['kpUndo','undo'],['kpPrint','printer'],['kpCut','puzzle'],['pzBack','undo'],['pzAgain','puzzle'],['kpHang','frame'],['kpFarm','barn'],['abcHear','speaker'],['abcFarm','barn'],['cntHear','speaker'],['cntFarm','barn'],['fsTitle','full'],['fsPause','full'],['fsRotate','full'],['tallBtn','close']]
  .forEach(([id,n])=>{const b=$(id);if(b&&!b.querySelector('.ico'))b.insertAdjacentHTML('afterbegin',icon(n));});
 $('musicBtn').onclick=()=>{audio();setMusic(!MUSIC.on);};setMusic(MUSIC.on);
 // switch between the new detailed animals and the classic ones (the game reloads to rebuild them)
