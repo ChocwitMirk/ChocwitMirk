@@ -1,5 +1,5 @@
  'use strict';
-/* Chocwit Mirk Studios cartridge launcher — mobile fullscreen/orientation patch. */
+/* Chocwit Mirk Studios cartridge launcher — stable iframe across rotation. */
 const catalog = Object.freeze({
   moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm/index.html',art:'assets/moonies.webp'},
   fish:{title:'Fish Is Fish',url:'games/fish-is-fish/index.html',art:'assets/fish.webp'},
@@ -29,13 +29,13 @@ function updateFullscreenSize(){
   const h=window.visualViewport?.height||window.innerHeight;
   if(Number.isFinite(h)&&h>0)document.documentElement.style.setProperty('--arcade-fs-height',`${Math.round(h)}px`);
 }
+// Never reparent a live iframe. append() to a different container reloads its
+// browsing context and destroys game state on many mobile browsers.
+// On phones the CSS keeps the mobile scene active across orientation changes.
 function syncGameLocation(){
   if(!current||!gameFrame.isConnected)return;
-  // CRITICAL: moving an iframe during fullscreen/rotation can terminate fullscreen and reload its document.
-  if(document.fullscreenElement||document.webkitFullscreenElement)return;
-  const content=activeContent();
-  if(gameFrame.parentNode!==content){content.querySelector('.idle').hidden=true;content.append(gameFrame)}
-  for(const id of ['desktopContent','mobileContent'])if($(id)!==content)$(id).querySelector('.idle').hidden=false;
+  // Deliberately do not move, detach, or replace gameFrame here.
+  // A change in viewport size is handled by CSS and the game itself.
 }
 async function fullscreen(){
   if(!current)return toast('Select a game first');
@@ -63,13 +63,13 @@ $('consoleHit').addEventListener('click',()=>current?eject():toast('Choose a car
 $('desktopFullscreen').addEventListener('click',fullscreen);fullscreenBtn.addEventListener('click',fullscreen);ejectBtn.addEventListener('click',eject);newTabBtn.addEventListener('click',openGame);
 $('helpBtn').addEventListener('click',()=>$('helpDialog').showModal());$('closeHelp').addEventListener('click',()=>$('helpDialog').close());$('year').textContent=new Date().getFullYear();
 document.addEventListener('keydown',event=>{const t=event.target;if(t?.matches('input, textarea, select')||$('helpDialog').open)return;const keys=['moonies','fish','foozball','downhill'];if(/^[1-4]$/.test(event.key))selectGame(keys[Number(event.key)-1],document.querySelector(`[data-game="${keys[Number(event.key)-1]}"]`));else if(event.key.toLowerCase()==='f'&&current)fullscreen();else if(event.key.toLowerCase()==='e'&&current)eject()});
-const onLayoutChange=()=>{updateFullscreenSize();syncGameLocation()};
+const onLayoutChange=()=>{updateFullscreenSize()};
 if(mq.addEventListener)mq.addEventListener('change',onLayoutChange);else mq.addListener(onLayoutChange);
 window.addEventListener('orientationchange',()=>{updateFullscreenSize();requestAnimationFrame(updateFullscreenSize)});
 window.addEventListener('resize',updateFullscreenSize,{passive:true});
 if(window.visualViewport)window.visualViewport.addEventListener('resize',updateFullscreenSize,{passive:true});
-document.addEventListener('fullscreenchange',()=>{updateFullscreenSize();if(!document.fullscreenElement)syncGameLocation()});
-document.addEventListener('webkitfullscreenchange',()=>{updateFullscreenSize();if(!document.webkitFullscreenElement)syncGameLocation()});
+document.addEventListener('fullscreenchange',updateFullscreenSize);
+document.addEventListener('webkitfullscreenchange',updateFullscreenSize);
 updateFullscreenSize();
 // Direct-link selections: #moonies, #fish, #foozball, #downhill
 const deepLink=location.hash.slice(1).toLowerCase();if(catalog[deepLink])selectGame(deepLink,document.querySelector(`[data-game="${deepLink}"]`));
