@@ -49,7 +49,7 @@
 </section>
 </main>
 <footer>© <span id="year"></span> CHOCWIT MIRK STUDIOS · ORIGINAL GAMES, ORIGINAL CONSOLE</footer>
-<dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p>Select one of the cartridges. It will load inside the TV. Use <strong>Fullscreen</strong> for a larger game view, or <strong>Open Game</strong> if your mobile browser does not allow fullscreen.</p><p>Each cartridge loads its own game folder. Update a game by replacing the <code>index.html</code> inside its folder.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
+<dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p>Select a cartridge to play. On iPhone and phones without fullscreen support, the game opens directly. In the TV arcade, use <strong>Fullscreen</strong> to expand the screen or <strong>Open Game</strong> to play on its own page.</p><p>Each cartridge loads its own game folder. Update a game by replacing the <code>index.html</code> inside its folder.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
 <dialog id="accountDialog" class="account-dialog" aria-labelledby="accountTitle">
   <form method="dialog"><button class="account-close" aria-label="Close player account">×</button></form>
   <div class="account-header"><span class="account-icon">▦</span><h2 id="accountTitle">PLAYER ACCOUNT</h2><p id="accountSubtitle">Play as a guest or sign in to your arcade profile.</p></div>
@@ -67,7 +67,7 @@
   <form method="dialog"><button class="sponsor-dismiss">BACK TO THE ARCADE</button></form>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js" defer></script>
+<script src="app.js?v=2" defer></script>
 <script src="sponsor.js" defer></script>
 <script type="module" src="account.js"></script>
 </body></html>
