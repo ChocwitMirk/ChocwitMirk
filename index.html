@@ -4,6 +4,12 @@
 <meta name="theme-color" content="#171020"><meta name="description" content="Pick a cartridge and play original games at Chocwit Mirk Studios.">
 <title>Chocwit Mirk Studios | Cartridge Arcade</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+<style>
+    .secret-book{left:95.1%;top:27.4%;width:2.05%;height:11%;z-index:10}
+    .mobile-secret-book{position:absolute;right:1%;top:-20px;width:34px;height:58px;border:1px solid #73331f;border-radius:3px;z-index:5;background:#a74723 url("assets/arcade-room.webp?v=downhill-art-2") 97.2% 30.9%/5225% 941% no-repeat;box-shadow:0 2px 4px #000a;touch-action:manipulation}
+    #bookDialog input{display:block;width:100%;padding:.7rem;background:#170f20;color:inherit;border:1px solid #ca8558;border-radius:4px;font:inherit}
+    #bookError{color:#ffad88;min-height:1.2em}
+</style>
 </head><body>
 <a class="skip" href="#cartridges">Skip to cartridges</a>
 <header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><div class="header-actions"><div class="account-menu"><button type="button" id="accountBtn" class="account-button" aria-haspopup="dialog" aria-controls="accountDialog">♙ PLAYER LOGIN</button></div><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></div></header>
@@ -26,6 +32,7 @@
     <button class="scene-hit loot-hit" data-game="downhill" aria-label="Play Downhill Delinquents"></button>
     <button class="scene-hit console-hit" id="consoleHit" aria-label="Eject game cartridge" title="Eject cartridge"></button>
     <button class="screen-fs desktop-fs" id="desktopFullscreen" aria-label="Play in fullscreen">⛶ <span>FULLSCREEN</span></button>
+    <button class="scene-hit secret-book" type="button" data-secret-book aria-label="Open the orange book" aria-haspopup="dialog"></button>
     <div class="slot-flash" aria-hidden="true"></div>
   </div>
   <div class="mobile-scene">
@@ -33,7 +40,7 @@
       <img src="assets/tv.webp" alt="Vintage square CRT television" draggable="false">
       <div class="mobile-tv-screen tv-screen" id="mobileScreen"><div class="screen-content" id="mobileContent"><div class="idle"><div class="pixel-ghost">▦</div><strong>CHOCWIT MIRK<br>STUDIOS</strong><div class="rule"></div><p>INSERT A CARTRIDGE<br>TO PLAY</p></div></div><div class="scanlines" aria-hidden="true"></div><div class="static-effect" aria-hidden="true"></div></div>
     </div>
-    <div class="mobile-console"><img src="assets/console.webp" alt="Original Chocwit Mirk game system with a cartridge slot"><div class="mobile-slot-light" aria-hidden="true"></div></div>
+    <div class="mobile-console"><img src="assets/console.webp" alt="Original Chocwit Mirk game system with a cartridge slot"><div class="mobile-slot-light" aria-hidden="true"></div><button class="mobile-secret-book" type="button" data-secret-book aria-label="Open the orange book" aria-haspopup="dialog"></button></div>
   </div>
 </section>
 <a class="mobile-sponsor" href="#sponsorInfo" aria-label="Advertisement: Sponsor this arcade wall"><img src="assets/sponsor-poster.webp" alt="Sponsor this arcade wall"><span>ADVERTISEMENT · SPONSOR THIS ARCADE</span></a>
@@ -70,4 +77,40 @@
 <script src="app.js?v=2" defer></script>
 <script src="sponsor.js" defer></script>
 <script type="module" src="account.js"></script>
+<dialog id="bookDialog" class="help-dialog" aria-labelledby="bookTitle">
+  <h2 id="bookTitle">The orange book</h2>
+  <form id="bookCodeForm">
+    <label for="bookCode">Enter code</label>
+    <input id="bookCode" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="bookError" required>
+    <p id="bookError" role="status"></p>
+    <div class="dialog-actions"><button id="closeBook" type="button">CLOSE</button><button type="submit">OPEN</button></div>
+  </form>
+</dialog>
+<script>
+(() => {
+  const dialog = document.getElementById('bookDialog');
+  const form = document.getElementById('bookCodeForm');
+  const code = document.getElementById('bookCode');
+  const error = document.getElementById('bookError');
+  document.querySelectorAll('[data-secret-book]').forEach(book => book.addEventListener('click', () => {
+    form.reset();
+    error.textContent = '';
+    code.removeAttribute('aria-invalid');
+    dialog.showModal();
+    code.focus();
+  }));
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (code.value.trim().toLowerCase() !== 'moregames') {
+      error.textContent = 'That code didn’t open the book.';
+      code.setAttribute('aria-invalid', 'true');
+      code.focus();
+      code.select();
+      return;
+    }
+    window.location.assign('more-games/');
+  });
+  document.getElementById('closeBook').addEventListener('click', () => dialog.close());
+})();
+</script>
 </body></html>
