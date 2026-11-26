@@ -26,7 +26,12 @@ function toast(message){const el=$('toast');el.textContent=message;el.classList.
 function setButtons(enabled){fullscreenBtn.disabled=!enabled;ejectBtn.disabled=!enabled;newTabBtn.disabled=!enabled;document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('selected',enabled&&b.dataset.game===current));document.querySelector('.power-dot').classList.toggle('on',enabled)}
 function blankFrame(){gameFrame.removeAttribute('src');gameFrame.remove();for(const id of ['desktopContent','mobileContent']){$(id).querySelector('.idle').hidden=false}}
 function animateCartridge(gameId,source){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return Promise.resolve();const mobileMode=mq.matches;const destination=mobileMode?document.querySelector('.mobile-console'):$('consoleHit');const start=source?.getBoundingClientRect(),end=destination?.getBoundingClientRect();if(!start||!end)return Promise.resolve();const ghost=document.createElement('img');ghost.src=catalog[gameId].art;ghost.alt='';ghost.className='flying-cartridge';const w=Math.min(mobileMode?110:125,Math.max(start.width*.55,75));ghost.style.cssText=`position:fixed;z-index:100;pointer-events:none;object-fit:contain;width:${w}px;height:${w*.65}px;left:${start.left+start.width/2-w/2}px;top:${start.top+start.height/2-w*.32}px;filter:drop-shadow(0 0 12px #ffaaff);`;document.body.append(ghost);document.body.classList.add('inserting');const tx=end.left+end.width*(mobileMode?.47:.46)-(start.left+start.width/2);const ty=end.top+end.height*.2-(start.top+start.height/2);const animation=ghost.animate([{transform:'translate(0,0) scale(1) rotate(-6deg)',opacity:1},{transform:`translate(${tx}px,${ty-20}px) scale(.68) rotate(1deg)`,opacity:1,offset:.72},{transform:`translate(${tx}px,${ty}px) scale(.55)`,opacity:0}],{duration:650,easing:'ease-in-out',fill:'forwards'});return animation.finished.catch(()=>{}).then(()=>{ghost.remove();document.body.classList.remove('inserting')})}
-async function selectGame(gameId,source){if(!Object.hasOwn(catalog,gameId))return;if(usesDirectPlay()){openGame(gameId);return;}const token=++seq;clearTimeout(bootTimeout);current=gameId;const g=catalog[gameId];setButtons(true);blankFrame();setStatus('INSERTING '+g.title.toUpperCase()+'…');document.querySelectorAll('.tv-screen').forEach(s=>s.classList.remove('booting'));await animateCartridge(gameId,source);if(token!==seq)return;const screen=activeScreen();screen.classList.add('booting');setStatus('BOOTING '+g.title.toUpperCase()+'…');bootTimeout=setTimeout(()=>{if(token!==seq)return;activeContent().querySelector('.idle').hidden=true;activeContent().append(gameFrame);gameFrame.src=g.url;screen.classList.remove('booting');setStatus('NOW PLAYING · '+g.title.toUpperCase());},720)}
+function prepareGame(gameId){
+  if(gameId!=='moonies')return;
+  // Reset the retired animal-model option before the same-origin game reads it.
+  try{localStorage.setItem('moonie-animals','classic')}catch{}
+}
+async function selectGame(gameId,source){if(!Object.hasOwn(catalog,gameId))return;if(usesDirectPlay()){openGame(gameId);return;}prepareGame(gameId);const token=++seq;clearTimeout(bootTimeout);current=gameId;const g=catalog[gameId];setButtons(true);blankFrame();setStatus('INSERTING '+g.title.toUpperCase()+'…');document.querySelectorAll('.tv-screen').forEach(s=>s.classList.remove('booting'));await animateCartridge(gameId,source);if(token!==seq)return;const screen=activeScreen();screen.classList.add('booting');setStatus('BOOTING '+g.title.toUpperCase()+'…');bootTimeout=setTimeout(()=>{if(token!==seq)return;activeContent().querySelector('.idle').hidden=true;activeContent().append(gameFrame);gameFrame.src=g.url;screen.classList.remove('booting');setStatus('NOW PLAYING · '+g.title.toUpperCase());},720)}
 function eject(){seq++;clearTimeout(bootTimeout);current=null;if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});blankFrame();document.querySelectorAll('.tv-screen').forEach(s=>s.classList.remove('booting'));document.body.classList.remove('inserting');setButtons(false);setStatus('CARTRIDGE EJECTED · SELECT A GAME');toast('Cartridge ejected')}
 function updateFullscreenSize(){
   // Re-read the current viewport after rotation. Avoid touching the iframe node or its src.
@@ -63,7 +68,9 @@ async function fullscreen(){
   }
 }
 function openGame(gameId=current){
-  if(gameId&&Object.hasOwn(catalog,gameId))window.location.assign(catalog[gameId].url);
+  if(!gameId||!Object.hasOwn(catalog,gameId))return;
+  prepareGame(gameId);
+  window.location.assign(catalog[gameId].url);
 }
 document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click',()=>selectGame(b.dataset.game,b)));
 $('consoleHit').addEventListener('click',()=>current?eject():toast('Choose a cartridge below'));
