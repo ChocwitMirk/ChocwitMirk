@@ -5,6 +5,9 @@
 <title>Chocwit Mirk Studios | Cartridge Arcade</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 <style>
+    .arcade-release{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;margin:0 0 12px;padding:10px 14px;border:1px solid #84605d;border-left:4px solid #d47c52;border-radius:6px;background:#241923;color:#ffedda;font:14px/1.4 'Courier New',monospace}
+    .arcade-release a{display:inline-flex;align-items:center;min-height:44px;color:#ffc693;font-weight:bold;text-underline-offset:4px}
+    .arcade-release a:focus-visible{outline:2px solid #ffcb9a;outline-offset:4px}
     .secret-book{left:95.1%;top:27.4%;width:2.05%;height:11%;z-index:10}
     .mobile-secret-book{position:absolute;right:1%;top:-20px;width:34px;height:58px;border:1px solid #73331f;border-radius:3px;z-index:5;background:#a74723 url("assets/arcade-room.webp?v=downhill-art-2") 97.2% 30.9%/5225% 941% no-repeat;box-shadow:0 2px 4px #000a;touch-action:manipulation}
     #bookDialog input{display:block;width:100%;padding:.7rem;background:#170f20;color:inherit;border:1px solid #ca8558;border-radius:4px;font:inherit}
@@ -14,6 +17,10 @@
 <a class="skip" href="#cartridges">Skip to cartridges</a>
 <header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><div class="header-actions"><div class="account-menu"><button type="button" id="accountBtn" class="account-button" aria-haspopup="dialog" aria-controls="accountDialog">♙ PLAYER LOGIN</button></div><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></div></header>
 <main>
+<div class="arcade-release">
+  <span><strong>Baby Battle Central</strong> · Restored 3D models and audio</span>
+  <a href="games/baby-battle-central/" aria-label="Play Baby Battle Central">PLAY NOW →</a>
+</div>
 <section class="arcade" aria-label="Interactive retro arcade gaming room">
   <div class="desktop-scene">
     <img src="assets/arcade-room.webp?v=downhill-art-2" alt="Vintage CRT television next to a custom Chocwit Mirk game console and four colorful cartridges" draggable="false" fetchpriority="high">
