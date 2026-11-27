@@ -1,0 +1,20 @@
+BABY BATTLE CENTRAL — Chocwit Mirk Studios
+
+Meshy AI models (furniture, appliances, babies, doors, handgun, props): generated for Chocwit Mirk Studios.
+
+Licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/) — optimised for the game
+(decimated, textures resized and stylised, toon shaded):
+- "Shotgun" by Pieter Ferreira — https://sketchfab.com/3d-models/shotgun-120ea3daf7f844999f56caac1b4a1c84
+- "Subaru Impreza STi 22B Stylized Toon" by Ponter — https://sketchfab.com/3d-models/subaru-impreza-sti-22b-stylized-toon-f4d3ade10cad4f71beb5db56650ac53d
+- "Mitsubishi Lancer Evolution V Stylized Toon" by Ponter — Sketchfab (sketchfab.com/ponter)
+- "Lolita '91 - Low poly model" by Daniel Zhabotinsky — https://sketchfab.com/3d-models/lolita-91-low-poly-model-128691a403ec4dd5af28c2e7c9037a3a
+
+Sounds (from the studio asset folder): gunshot.mp3 (pistol), reload.mp3 ("reload shoot" — shotgun + weapon found),
+music_windswept_peaks.mp3 ("Windswept Peaks"), giggle1-3 / laugh (baby giggles & laughing — freesound_community,
+scottishperson), splat_wet (universfield "cartoon wet splat"), splat_lancer (ximert979 "lancer splat").
+
+Treat + trap models: cake / cookies / candy packs from the studio asset folder (single items extracted and shrunk),
+"Spiked Circle Trap" (Meshy AI).
+Little Explorer character + the shared animation set (Mixamo-style clips on a rigify rig) from the studio asset folder;
+his clips are retargeted by bone name onto Baby A and Baby B.
+Engine: three.js (MIT licence), loaded from the jsDelivr CDN.
