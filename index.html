@@ -4,7 +4,16 @@
 <meta name="theme-color" content="#171020"><meta name="description" content="Pick a cartridge and play original games at Chocwit Mirk Studios.">
 <title>Chocwit Mirk Studios | Cartridge Arcade</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+<script>
+  if (/iPhone|iPod/i.test(navigator.userAgent) || /^(iPhone|iPod)$/.test(navigator.platform)) {
+    document.documentElement.classList.add('direct-arcade');
+  }
+</script>
 <style>
+    .direct-arcade .arcade,.direct-arcade .control-strip,.direct-arcade .desktop-helper,.direct-arcade .tv-instructions,.direct-instructions,.direct-book{display:none}
+    .direct-arcade .mobile-cartridges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 4px;max-width:580px;margin:12px auto}
+    .direct-arcade .direct-instructions,.direct-arcade .direct-book{display:block}
+    .direct-arcade .direct-book{margin:16px auto 0;padding:10px 14px;min-height:44px;border:1px solid #cf8359;border-radius:5px;background:#65321f;color:#ffedda;font:inherit}
     .scene-hit .cartridge-art{position:absolute;inset:16% 6% 18% 11%;width:83%;height:66%;object-fit:fill;pointer-events:none;border-radius:5%;clip-path:polygon(6% 0,96% 0,100% 100%,0 100%);filter:brightness(.89) saturate(.94)}
     .museum-hit .cartridge-art{inset:15% 9% 18% 9%;width:82%;height:67%;clip-path:polygon(0 0,93% 0,100% 100%,5% 100%)}
     .mobile-cart .cartridge-shell{box-sizing:border-box;display:block;width:100%;max-width:225px;aspect-ratio:1.65;padding:8% 9% 12%;border-radius:12% 12% 8% 8%;background:linear-gradient(155deg,#ef6453,#a72529 65%,#531216);box-shadow:inset 2px 2px 2px #fff5,inset -3px -5px 3px #0006,0 4px 6px #0009}
@@ -52,7 +61,7 @@
 </section>
 <a class="mobile-sponsor" href="#sponsorInfo" aria-label="Advertisement: Sponsor this arcade wall"><img src="assets/sponsor-poster.webp" alt="Sponsor this arcade wall"><span>ADVERTISEMENT · SPONSOR THIS ARCADE</span></a>
 <section class="control-strip" aria-label="Game controls"><div class="now-playing"><span class="power-dot"></span><span id="status" aria-live="polite">SYSTEM READY · SELECT A CARTRIDGE</span></div><div class="control-actions"><button id="ejectBtn" disabled>⏏ EJECT</button><button id="fullscreenBtn" disabled>⛶ FULLSCREEN</button><button id="newTabBtn" disabled>↗ OPEN GAME</button></div></section>
-<section class="library" id="cartridges" aria-labelledby="libraryTitle"><div class="library-heading"><h1 id="libraryTitle">SELECT A GAME CARTRIDGE</h1><p>Tap a cartridge to insert it into the system.</p></div>
+<section class="library" id="cartridges" aria-labelledby="libraryTitle"><div class="library-heading"><h1 id="libraryTitle">SELECT A GAME CARTRIDGE</h1><p class="tv-instructions">Tap a cartridge to insert it into the system.</p><p class="direct-instructions">Tap a cartridge to open the game.</p></div>
   <div class="mobile-cartridges" id="mobileCartridges">
     <button class="mobile-cart" data-game="moonies"><img src="assets/moonies.webp" alt=""/><span>MOONIE'S FUN FARM</span></button>
     <button class="mobile-cart" data-game="fish"><img src="assets/fish.webp" alt=""/><span>FISH IS FISH</span></button>
@@ -60,10 +69,11 @@
     <button class="mobile-cart" data-game="museum"><span class="cartridge-shell museum-shell"><img class="cartridge-art" src="assets/the-museum-label.webp" alt="" draggable="false"></span><span>THE MUSEUM</span></button>
   </div>
   <p class="desktop-helper">Click a cartridge in the scene above, or use <kbd>1</kbd>–<kbd>4</kbd> to select a game. <kbd>F</kbd> fullscreen · <kbd>E</kbd> eject.</p>
+  <button class="direct-book" type="button" data-secret-book aria-haspopup="dialog">Open the orange book</button>
 </section>
 </main>
 <footer>© <span id="year"></span> CHOCWIT MIRK STUDIOS · ORIGINAL GAMES, ORIGINAL CONSOLE</footer>
-<dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p>Select a cartridge to play. On iPhone and phones without fullscreen support, the game opens directly. In the TV arcade, use <strong>Fullscreen</strong> to expand the screen or <strong>Open Game</strong> to play on its own page.</p><p>Each cartridge loads its own game folder. Update a game by replacing the <code>index.html</code> inside its folder.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
+<dialog id="helpDialog" class="help-dialog"><h2>HOW TO PLAY</h2><p class="tv-instructions">Select a cartridge to play. In the TV arcade, use <strong>Fullscreen</strong> to expand the screen or <strong>Open Game</strong> to play on its own page.</p><p class="direct-instructions">Tap a cartridge to open the game in this tab. Use Back to return to the arcade.</p><div class="dialog-actions"><button id="closeHelp">GOT IT</button></div></dialog>
 <dialog id="accountDialog" class="account-dialog" aria-labelledby="accountTitle">
   <form method="dialog"><button class="account-close" aria-label="Close player account">×</button></form>
   <div class="account-header"><span class="account-icon">▦</span><h2 id="accountTitle">PLAYER ACCOUNT</h2><p id="accountSubtitle">Play as a guest or sign in to your arcade profile.</p></div>
@@ -81,7 +91,7 @@
   <form method="dialog"><button class="sponsor-dismiss">BACK TO THE ARCADE</button></form>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 <script src="sponsor.js" defer></script>
 <script type="module" src="account.js"></script>
 <dialog id="bookDialog" class="help-dialog" aria-labelledby="bookTitle">

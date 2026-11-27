@@ -17,10 +17,8 @@ gameFrame.style.cssText='position:absolute;inset:0;width:100%;height:100%;border
 let current=null,seq=0,bootTimeout=null,toastTimeout=null;
 const activeScreen=()=>mq.matches?mobile:desktop;
 const activeContent=()=>mq.matches?$('mobileContent'):$('desktopContent');
-const usesDirectPlay=()=>mq.matches&&(
-  /iPhone|iPod/.test(navigator.userAgent)||
-  !(document.fullscreenEnabled||document.webkitFullscreenEnabled)
-);
+const usesDirectPlay=()=>document.documentElement.classList.contains('direct-arcade')||
+  (mq.matches&&!(document.fullscreenEnabled||document.webkitFullscreenEnabled));
 function setStatus(message){status.textContent=message}
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2800)}
 function setButtons(enabled){fullscreenBtn.disabled=!enabled;ejectBtn.disabled=!enabled;newTabBtn.disabled=!enabled;document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('selected',enabled&&b.dataset.game===current));document.querySelector('.power-dot').classList.toggle('on',enabled)}
