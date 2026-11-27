@@ -9,13 +9,13 @@
     const response=await fetch('index.html',{cache:'no-store'});
     if(!response.ok)throw Error('Game file unavailable');
     let html=await response.text();
-    const css=String.raw\`
+    const css=String.raw`
 /* iPhone and iPad: stop text selection, touch callout, and page swipes while drawing. */
 .modal.open,.modal.open *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent}
 .modal.open input:not([type="range"]),.modal.open textarea{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
 #paintCanvas,#pagePaintCanvas{touch-action:none!important;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;overscroll-behavior:none;display:block}
 .modal.open .modal-inner{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-\`;
+`;
     if(!html.includes('</style></head>'))throw Error('Game stylesheet not found');
     html=html.replace('</style></head>',css+'</style></head>');
     function replaceBetween(first,last,replacement){
@@ -23,7 +23,7 @@
       if(i<0||j<=i)throw Error('Game touch controls changed');
       html=html.slice(0,i)+replacement+html.slice(j);
     }
-    replaceBetween("paintCanvas.addEventListener('pointerdown'","function paintUndo()",String.raw\`
+    replaceBetween("paintCanvas.addEventListener('pointerdown'","function paintUndo()",String.raw`
 let paintTouchIdentifier=null;
 function paintStart(point){if(!paintReady)return;paintHistory.push(paintLayer.toDataURL('image/png'));if(paintHistory.length>11)paintHistory.shift();painting=true;paintLast=paintPosition(point);paintSegment(paintLast,paintLast)}
 function paintMove(point){if(!painting||!paintLast)return;const p=paintPosition(point);paintSegment(paintLast,p);paintLast=p}
@@ -36,8 +36,8 @@ paintCanvas.addEventListener('touchmove',e=>{if(paintTouchIdentifier===null)retu
 function paintTouchEnd(e){if(paintTouchIdentifier===null)return;const touch=Array.from(e.changedTouches).find(t=>t.identifier===paintTouchIdentifier);if(!touch)return;e.preventDefault();e.stopPropagation();paintTouchIdentifier=null;paintEnd()}
 paintCanvas.addEventListener('touchend',paintTouchEnd,{passive:false});
 paintCanvas.addEventListener('touchcancel',paintTouchEnd,{passive:false});
-\`);
-    replaceBetween("  pageCanvas.addEventListener('pointerdown'","  $('closePagePaint').addEventListener",String.raw\`
+`);
+    replaceBetween("  pageCanvas.addEventListener('pointerdown'","  $('closePagePaint').addEventListener",String.raw`
   let pageTouchIdentifier=null;
   function pageStart(point){if(!pageBaseImg)return;pageHistory.push(pageOverlay.toDataURL('image/png'));if(pageHistory.length>12)pageHistory.shift();pagePainting=true;pageLast=pagePos(point);pageSeg(pageLast,pageLast)}
   function pageMove(point){if(!pagePainting||!pageLast)return;const p=pagePos(point);pageSeg(pageLast,p);pageLast=p}
@@ -50,7 +50,7 @@ paintCanvas.addEventListener('touchcancel',paintTouchEnd,{passive:false});
   function pageTouchEnd(e){if(pageTouchIdentifier===null)return;const touch=Array.from(e.changedTouches).find(t=>t.identifier===pageTouchIdentifier);if(!touch)return;e.preventDefault();e.stopPropagation();pageTouchIdentifier=null;pageEnd()}
   pageCanvas.addEventListener('touchend',pageTouchEnd,{passive:false});
   pageCanvas.addEventListener('touchcancel',pageTouchEnd,{passive:false});
-\`);
+`);
     html=html.replace('</body></html>','<scr'+'ipt src="iphone-guard.js?v=2"></scr'+'ipt></body></html>');
     document.open();document.write(html);document.close();
   }catch(error){
