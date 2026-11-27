@@ -14,8 +14,9 @@
     .direct-arcade .mobile-cartridges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 4px;max-width:580px;margin:12px auto}
     .direct-arcade .direct-instructions,.direct-arcade .direct-book{display:block}
     .direct-arcade .direct-book{margin:16px auto 0;padding:10px 14px;min-height:44px;border:1px solid #cf8359;border-radius:5px;background:#65321f;color:#ffedda;font:inherit}
-    .scene-hit .cartridge-art{position:absolute;inset:16% 6% 18% 11%;width:83%;height:66%;object-fit:fill;pointer-events:none;border-radius:5%;clip-path:polygon(6% 0,96% 0,100% 100%,0 100%);filter:brightness(.89) saturate(.94)}
-    .museum-hit .cartridge-art{inset:15% 9% 18% 9%;width:82%;height:67%;clip-path:polygon(0 0,93% 0,100% 100%,5% 100%)}
+    /* Match each recessed label panel in the 1672 × 941 arcade-room image. */
+    .scene-hit .cartridge-art{position:absolute;left:17.3%;top:17.3%;width:75.7%;height:62.2%;object-fit:fill;pointer-events:none;clip-path:polygon(2% 0,93% 0,95.3% 4%,100% 96%,98% 100%,2% 100%,.4% 96%,0 4%);filter:brightness(.89) saturate(.94)}
+    .museum-hit .cartridge-art{left:19.2%;top:19.4%;width:72.1%;height:60%;clip-path:polygon(3% 0,87% 0,90% 5%,100% 96%,98% 100%,7% 100%,4.6% 96%,0 5%)}
     .mobile-cart .cartridge-shell{box-sizing:border-box;display:block;width:100%;max-width:225px;aspect-ratio:1.65;padding:8% 9% 12%;border-radius:12% 12% 8% 8%;background:linear-gradient(155deg,#ef6453,#a72529 65%,#531216);box-shadow:inset 2px 2px 2px #fff5,inset -3px -5px 3px #0006,0 4px 6px #0009}
     .mobile-cart .museum-shell{background:linear-gradient(155deg,#9b61cb,#522881 65%,#2a123c)}
     .mobile-cart .cartridge-shell img{height:100%;object-fit:fill;border-radius:5%;filter:none}
