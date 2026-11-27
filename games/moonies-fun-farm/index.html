@@ -16,7 +16,15 @@
       throw new Error('Game download was incomplete');
     }
     const decoder = new TextDecoder('utf-8', {fatal:true});
-    const source = parts.map(part => decoder.decode(part, {stream:true})).join('') + decoder.decode();
+    let source = parts.map(part => decoder.decode(part, {stream:true})).join('') + decoder.decode();
+    // Apply the MooPix update to the exact release this loader expects.
+    const base = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
+    const hex = Array.from(new Uint8Array(base), byte => byte.toString(16).padStart(2, '0')).join('');
+    if (hex !== 'a2399b9c95e1b99810b97d9e061def94e28d4b5316cd48d50f010e5baa6b1402') throw new Error('Game data did not match the expected release');
+    const updates = [[23526424, 812, "\n  const closeAt=.58, openAt=1.22, endAt=1.86;\n  if(D.t>=closeAt&&!D.slam){\n    D.slam=true;\n    KP.paint.fillStyle='#fff';\n    KP.paint.fillRect(0,0,1000,700);\n    KP.sticker.clearRect(0,0,1000,700);\n    KP.page='blank';\n    kpPage(KP.page);\n    kpOpts();\n    noiseBurst(.15,.2,450);\n    say('Goodbye!');\n  }\n  if(D.t>=endAt){KP.dyn=null;return;}\n  const progress=clamp(D.t<closeAt?D.t/closeAt:(endAt-D.t)/(endAt-openAt),0,1);\n  const eased=progress*progress*(3-2*progress);\n  const angle=(1-eased)*Math.PI/2;\n  f.save();\n  // The left edge stays on the hinge while the latch edge swings.\n  f.transform(Math.cos(angle),-.085*Math.sin(angle),0,1,0,0);\n  f.fillStyle='#b77440';\n  f.fillRect(0,-100,1000,900);\n  f.lineWidth=9;\n  f.strokeStyle='#703e23';\n  for(let x=0;x<=1000;x+=125){\n    f.beginPath();\n    f.moveTo(x,-100);\n    f.lineTo(x,800);\n    f.stroke();\n  }\n  f.strokeRect(18,14,964,672);\n  f.fillStyle='#96562e';\n  f.fillRect(20,125,960,35);\n  f.fillRect(20,540,960,35);\n  f.fillStyle='#4c382b';\n  f.fillRect(0,132,105,20);\n  f.fillRect(0,547,105,20);\n  f.fillStyle='#fbd455';\n  f.beginPath();\n  f.arc(923,350,24,0,TAU);\n  f.fill();\n  f.stroke();\n  if(D.t>=closeAt&&D.t<openAt){\n    f.font='bold 70px sans-serif';\n    f.textAlign='center';\n    f.strokeText('Goodbye!',500,365);\n    f.fillStyle='#fff6df';\n    f.fillText('Goodbye!',500,365);\n  }\n  f.restore();\n"], [23085258, 6, "Up();kpSnap();KP.undo.at(-1)[2]=KP.page"], [23084938, 3, "kpSpeakLetter"], [23083988, 0, "const KP_LETTER_NAMES=['ay','bee','see','dee','ee','eff','gee','aitch','eye','jay','kay','el','em','en','oh','pee','cue','ar','ess','tee','you','vee','double you','ex','why','zee'];\nfunction kpSpeakLetter(glyph){\n  voiceStop();\n  sayTTS(KP_LETTER_NAMES[glyph.charCodeAt(0)-65]);\n}\n"], [23077047, 0, "if(u[2]){KP.page=u[2];kpPage(KP.page);kpOpts();}"], [23067479, 0, "dyn=null;KP.fx.clearRect(0,0,1000,700);KP."]];
+    for (const [offset, length, replacement] of updates) {
+      source = source.slice(0, offset) + replacement + source.slice(offset + length);
+    }
     document.open();
     document.write(source);
     document.close();
