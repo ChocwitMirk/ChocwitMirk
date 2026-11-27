@@ -5,9 +5,14 @@
 <title>Chocwit Mirk Studios | Cartridge Arcade</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 <style>
-    .arcade-release{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;margin:0 0 12px;padding:10px 14px;border:1px solid #84605d;border-left:4px solid #d47c52;border-radius:6px;background:#241923;color:#ffedda;font:14px/1.4 'Courier New',monospace}
-    .arcade-release a{display:inline-flex;align-items:center;min-height:44px;color:#ffc693;font-weight:bold;text-underline-offset:4px}
-    .arcade-release a:focus-visible{outline:2px solid #ffcb9a;outline-offset:4px}
+    .cartridge-label{box-sizing:border-box;display:grid;place-items:center;text-align:center;color:#fff8ec;font-weight:900;line-height:1.06;letter-spacing:.04em;text-shadow:0 2px 0 #1c1026;border:2px solid #ffffff50;border-radius:6px;box-shadow:inset 0 0 12px #0005}
+    .color-label{background:linear-gradient(135deg,#54276e,#a83460 52%,#8f4720)}
+    .museum-label{background:linear-gradient(145deg,#35254d,#47355e 65%,#55432b)}
+    .scene-hit .cartridge-label{position:absolute;inset:16% 5% 31% 11%;font-size:clamp(10px,1.45vw,26px)}
+    .museum-hit .cartridge-label{inset:15% 4% 31% 13%}
+    .color-hit{left:50.8%;top:72%;width:18.5%;height:20%}
+    .museum-hit{left:70.2%;top:72%;width:20%;height:20%}
+    .mobile-cart .cartridge-label{width:100%;max-width:225px;aspect-ratio:1.7;border-width:7px;padding:8px;font-size:clamp(14px,3.5vw,22px)}
     .secret-book{left:95.1%;top:27.4%;width:2.05%;height:11%;z-index:10}
     .mobile-secret-book{position:absolute;right:1%;top:-20px;width:34px;height:58px;border:1px solid #73331f;border-radius:3px;z-index:5;background:#a74723 url("assets/arcade-room.webp?v=downhill-art-2") 97.2% 30.9%/5225% 941% no-repeat;box-shadow:0 2px 4px #000a;touch-action:manipulation}
     #bookDialog input{display:block;width:100%;padding:.7rem;background:#170f20;color:inherit;border:1px solid #ca8558;border-radius:4px;font:inherit}
@@ -17,13 +22,9 @@
 <a class="skip" href="#cartridges">Skip to cartridges</a>
 <header class="site-header"><a href="./" class="brand"><span class="brand-mark">▦</span> CHOCWIT MIRK STUDIOS <span class="brand-tag">CARTRIDGE ARCADE</span></a><div class="header-actions"><div class="account-menu"><button type="button" id="accountBtn" class="account-button" aria-haspopup="dialog" aria-controls="accountDialog">♙ PLAYER LOGIN</button></div><button class="help-button" id="helpBtn" aria-haspopup="dialog">? HOW TO PLAY</button></div></header>
 <main>
-<div class="arcade-release">
-  <span><strong>Baby Battle Central</strong> · Restored 3D models and audio</span>
-  <a href="games/baby-battle-central/" aria-label="Play Baby Battle Central">PLAY NOW →</a>
-</div>
 <section class="arcade" aria-label="Interactive retro arcade gaming room">
   <div class="desktop-scene">
-    <img src="assets/arcade-room.webp?v=downhill-art-2" alt="Vintage CRT television next to a custom Chocwit Mirk game console and four colorful cartridges" draggable="false" fetchpriority="high">
+    <img src="assets/arcade-room.webp?v=downhill-art-2" alt="Vintage CRT television next to a custom Chocwit Mirk game console and colorful cartridges" draggable="false" fetchpriority="high">
     <!-- Replaceable sponsored wall poster; all positioning scales with the original 1672×941 artwork. -->
     <a class="wall-sponsor" id="wallSponsor" href="#sponsorInfo" aria-label="Advertisement: sponsor this arcade wall" title="Advertisement — Sponsor this wall">
       <img src="assets/sponsor-poster.webp" alt="Your Game Here — Sponsor this Arcade Wall" draggable="false">
@@ -35,8 +36,8 @@
     </div>
     <button class="scene-hit moonie-hit" data-game="moonies" aria-label="Play Moonie's Fun Farm"></button>
     <button class="scene-hit fish-hit" data-game="fish" aria-label="Play Fish Is Fish"></button>
-    <button class="scene-hit fooz-hit" data-game="foozball" aria-label="Play Fantasy Foozball"></button>
-    <button class="scene-hit loot-hit" data-game="downhill" aria-label="Play Downhill Delinquents"></button>
+    <button class="scene-hit color-hit" data-game="color" aria-label="Play Color It Alive"><span class="cartridge-label color-label" aria-hidden="true">COLOR IT ALIVE</span></button>
+    <button class="scene-hit museum-hit" data-game="museum" aria-label="Play The Museum"><span class="cartridge-label museum-label" aria-hidden="true">THE MUSEUM</span></button>
     <button class="scene-hit console-hit" id="consoleHit" aria-label="Eject game cartridge" title="Eject cartridge"></button>
     <button class="screen-fs desktop-fs" id="desktopFullscreen" aria-label="Play in fullscreen">⛶ <span>FULLSCREEN</span></button>
     <button class="scene-hit secret-book" type="button" data-secret-book aria-label="Open the orange book" aria-haspopup="dialog"></button>
@@ -56,8 +57,8 @@
   <div class="mobile-cartridges" id="mobileCartridges">
     <button class="mobile-cart" data-game="moonies"><img src="assets/moonies.webp" alt=""/><span>MOONIE'S FUN FARM</span></button>
     <button class="mobile-cart" data-game="fish"><img src="assets/fish.webp" alt=""/><span>FISH IS FISH</span></button>
-    <button class="mobile-cart" data-game="foozball"><img src="assets/foozball.webp" alt=""/><span>FANTASY FOOZBALL</span></button>
-    <button class="mobile-cart downhill-mobile" data-game="downhill"><img src="assets/downhill.webp?v=downhill-art-2" alt=""/><span>DOWNHILL DELINQUENTS</span></button>
+    <button class="mobile-cart" data-game="color"><span class="cartridge-label color-label">COLOR IT ALIVE</span></button>
+    <button class="mobile-cart" data-game="museum"><span class="cartridge-label museum-label">THE MUSEUM</span></button>
   </div>
   <p class="desktop-helper">Click a cartridge in the scene above, or use <kbd>1</kbd>–<kbd>4</kbd> to select a game. <kbd>F</kbd> fullscreen · <kbd>E</kbd> eject.</p>
 </section>
@@ -81,7 +82,7 @@
   <form method="dialog"><button class="sponsor-dismiss">BACK TO THE ARCADE</button></form>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=3" defer></script>
+<script src="app.js?v=4" defer></script>
 <script src="sponsor.js" defer></script>
 <script type="module" src="account.js"></script>
 <dialog id="bookDialog" class="help-dialog" aria-labelledby="bookTitle">

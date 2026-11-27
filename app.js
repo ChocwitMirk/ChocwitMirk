@@ -3,8 +3,8 @@
 const catalog = Object.freeze({
   moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm/index.html',art:'assets/moonies.webp'},
   fish:{title:'Fish Is Fish',url:'games/fish-is-fish/index.html',art:'assets/fish.webp'},
-  foozball:{title:'Fantasy Foozball',url:'games/fantasy-foozball/index.html',art:'assets/foozball.webp'},
-  downhill:{title:'Downhill Delinquents',url:'games/downhill-delinquents/index.html',art:'assets/looting.webp'}
+  color:{title:'Color It Alive',url:'games/color-it-alive/index.html'},
+  museum:{title:'The Museum',url:'games/the-museum/index.html'}
 });
 const $ = id=>document.getElementById(id);
 const desktop=$('desktopScreen'),mobile=$('mobileScreen'),status=$('status'),fullscreenBtn=$('fullscreenBtn'),ejectBtn=$('ejectBtn'),newTabBtn=$('newTabBtn');
@@ -25,7 +25,7 @@ function setStatus(message){status.textContent=message}
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2800)}
 function setButtons(enabled){fullscreenBtn.disabled=!enabled;ejectBtn.disabled=!enabled;newTabBtn.disabled=!enabled;document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('selected',enabled&&b.dataset.game===current));document.querySelector('.power-dot').classList.toggle('on',enabled)}
 function blankFrame(){gameFrame.removeAttribute('src');gameFrame.remove();for(const id of ['desktopContent','mobileContent']){$(id).querySelector('.idle').hidden=false}}
-function animateCartridge(gameId,source){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return Promise.resolve();const mobileMode=mq.matches;const destination=mobileMode?document.querySelector('.mobile-console'):$('consoleHit');const start=source?.getBoundingClientRect(),end=destination?.getBoundingClientRect();if(!start||!end)return Promise.resolve();const ghost=document.createElement('img');ghost.src=catalog[gameId].art;ghost.alt='';ghost.className='flying-cartridge';const w=Math.min(mobileMode?110:125,Math.max(start.width*.55,75));ghost.style.cssText=`position:fixed;z-index:100;pointer-events:none;object-fit:contain;width:${w}px;height:${w*.65}px;left:${start.left+start.width/2-w/2}px;top:${start.top+start.height/2-w*.32}px;filter:drop-shadow(0 0 12px #ffaaff);`;document.body.append(ghost);document.body.classList.add('inserting');const tx=end.left+end.width*(mobileMode?.47:.46)-(start.left+start.width/2);const ty=end.top+end.height*.2-(start.top+start.height/2);const animation=ghost.animate([{transform:'translate(0,0) scale(1) rotate(-6deg)',opacity:1},{transform:`translate(${tx}px,${ty-20}px) scale(.68) rotate(1deg)`,opacity:1,offset:.72},{transform:`translate(${tx}px,${ty}px) scale(.55)`,opacity:0}],{duration:650,easing:'ease-in-out',fill:'forwards'});return animation.finished.catch(()=>{}).then(()=>{ghost.remove();document.body.classList.remove('inserting')})}
+function animateCartridge(gameId,source){if(!catalog[gameId].art||matchMedia('(prefers-reduced-motion: reduce)').matches)return Promise.resolve();const mobileMode=mq.matches;const destination=mobileMode?document.querySelector('.mobile-console'):$('consoleHit');const start=source?.getBoundingClientRect(),end=destination?.getBoundingClientRect();if(!start||!end)return Promise.resolve();const ghost=document.createElement('img');ghost.src=catalog[gameId].art;ghost.alt='';ghost.className='flying-cartridge';const w=Math.min(mobileMode?110:125,Math.max(start.width*.55,75));ghost.style.cssText=`position:fixed;z-index:100;pointer-events:none;object-fit:contain;width:${w}px;height:${w*.65}px;left:${start.left+start.width/2-w/2}px;top:${start.top+start.height/2-w*.32}px;filter:drop-shadow(0 0 12px #ffaaff);`;document.body.append(ghost);document.body.classList.add('inserting');const tx=end.left+end.width*(mobileMode?.47:.46)-(start.left+start.width/2);const ty=end.top+end.height*.2-(start.top+start.height/2);const animation=ghost.animate([{transform:'translate(0,0) scale(1) rotate(-6deg)',opacity:1},{transform:`translate(${tx}px,${ty-20}px) scale(.68) rotate(1deg)`,opacity:1,offset:.72},{transform:`translate(${tx}px,${ty}px) scale(.55)`,opacity:0}],{duration:650,easing:'ease-in-out',fill:'forwards'});return animation.finished.catch(()=>{}).then(()=>{ghost.remove();document.body.classList.remove('inserting')})}
 function prepareGame(gameId){
   if(gameId!=='moonies')return;
   // Reset the retired animal-model option before the same-origin game reads it.
@@ -76,7 +76,7 @@ document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click',(
 $('consoleHit').addEventListener('click',()=>current?eject():toast('Choose a cartridge below'));
 $('desktopFullscreen').addEventListener('click',fullscreen);fullscreenBtn.addEventListener('click',fullscreen);ejectBtn.addEventListener('click',eject);newTabBtn.addEventListener('click',()=>openGame());
 $('helpBtn').addEventListener('click',()=>$('helpDialog').showModal());$('closeHelp').addEventListener('click',()=>$('helpDialog').close());$('year').textContent=new Date().getFullYear();
-document.addEventListener('keydown',event=>{const t=event.target;if(t?.matches('input, textarea, select')||$('helpDialog').open)return;const keys=['moonies','fish','foozball','downhill'];if(/^[1-4]$/.test(event.key))selectGame(keys[Number(event.key)-1],document.querySelector(`[data-game="${keys[Number(event.key)-1]}"]`));else if(event.key.toLowerCase()==='f'&&current)fullscreen();else if(event.key.toLowerCase()==='e'&&current)eject()});
+document.addEventListener('keydown',event=>{const t=event.target;if(t?.matches('input, textarea, select')||$('helpDialog').open)return;const keys=Object.keys(catalog);if(/^[1-4]$/.test(event.key))selectGame(keys[Number(event.key)-1],document.querySelector(`[data-game="${keys[Number(event.key)-1]}"]`));else if(event.key.toLowerCase()==='f'&&current)fullscreen();else if(event.key.toLowerCase()==='e'&&current)eject()});
 const onLayoutChange=()=>{updateFullscreenSize()};
 if(mq.addEventListener)mq.addEventListener('change',onLayoutChange);else mq.addListener(onLayoutChange);
 window.addEventListener('orientationchange',()=>{updateFullscreenSize();requestAnimationFrame(updateFullscreenSize)});
@@ -85,5 +85,5 @@ if(window.visualViewport)window.visualViewport.addEventListener('resize',updateF
 document.addEventListener('fullscreenchange',updateFullscreenSize);
 document.addEventListener('webkitfullscreenchange',updateFullscreenSize);
 updateFullscreenSize();
-// Direct-link selections: #moonies, #fish, #foozball, #downhill
+// Direct-link selections: #moonies, #fish, #color, #museum
 const deepLink=location.hash.slice(1).toLowerCase();if(catalog[deepLink])selectGame(deepLink,document.querySelector(`[data-game="${deepLink}"]`));
