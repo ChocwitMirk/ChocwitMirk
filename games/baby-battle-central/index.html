@@ -8,16 +8,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Baby Battle">
 <meta name="theme-color" content="#15121f">
-<title>Baby Battle Central — Phase 1</title>
+<title>Baby Battle Central | Chocwit Mirk Studios</title>
+<meta name="description" content="Baby Battle Central: an early playable last-baby-standing browser game with solo bots, practice, and peer-to-peer rooms.">
 <!--
   BABY BATTLE CENTRAL — Chocwit Mirk Studios
-  Phase 1: exploration prototype (single player, no backend).
+  Early playable browser build: solo battle, practice, and PeerJS-powered host/join rooms.
+  This is not a final release; network play requires an internet connection.
 
   HOW TO RUN
-  - Keep the "assets" folder next to index.html. Double-click index.html in Chrome / Edge /
-    Firefox. Internet is needed so Three.js can load from the jsDelivr CDN.
-  - Models are packed as assets/models/*.js (base64 GLB) so they load even from file://.
-    If a model is missing, a placeholder box/primitive is shown and the game still runs.
+  - Open the hosted game in a modern browser. Internet is required to load Three.js,
+    and online rooms use PeerJS.
+  - Optional 3D models load from assets/models/*.js and audio from assets/sounds/.
+    These asset folders are not present in the current website repository.
+    Missing 3D models fall back to simple geometry; some recorded audio will be unavailable.
   - Phones: host the folder (e.g. itch.io HTML upload, GitHub Pages, Netlify) and open the link.
   - Houses: "Import map" / "Export map" read and write Chocwit Mirk World Editor .cmworld files.
     Edit them in "House Editor.html" (see "MAP EDITOR - README.txt"). Format notes: CORE, MAP IMPORT / EXPORT.
