@@ -5,14 +5,13 @@
 <title>Chocwit Mirk Studios | Cartridge Arcade</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 <style>
-    .cartridge-label{box-sizing:border-box;display:grid;place-items:center;text-align:center;color:#fff8ec;font-weight:900;line-height:1.06;letter-spacing:.04em;text-shadow:0 2px 0 #1c1026;border:2px solid #ffffff50;border-radius:6px;box-shadow:inset 0 0 12px #0005}
-    .color-label{background:linear-gradient(135deg,#54276e,#a83460 52%,#8f4720)}
-    .museum-label{background:linear-gradient(145deg,#35254d,#47355e 65%,#55432b)}
-    .scene-hit .cartridge-label{position:absolute;inset:16% 5% 31% 11%;font-size:clamp(10px,1.45vw,26px)}
-    .museum-hit .cartridge-label{inset:15% 4% 31% 13%}
+    .scene-hit .cartridge-art{position:absolute;inset:16% 6% 18% 11%;width:83%;height:66%;object-fit:fill;pointer-events:none;border-radius:5%;clip-path:polygon(6% 0,96% 0,100% 100%,0 100%);filter:brightness(.89) saturate(.94)}
+    .museum-hit .cartridge-art{inset:15% 9% 18% 9%;width:82%;height:67%;clip-path:polygon(0 0,93% 0,100% 100%,5% 100%)}
+    .mobile-cart .cartridge-shell{box-sizing:border-box;display:block;width:100%;max-width:225px;aspect-ratio:1.65;padding:8% 9% 12%;border-radius:12% 12% 8% 8%;background:linear-gradient(155deg,#ef6453,#a72529 65%,#531216);box-shadow:inset 2px 2px 2px #fff5,inset -3px -5px 3px #0006,0 4px 6px #0009}
+    .mobile-cart .museum-shell{background:linear-gradient(155deg,#9b61cb,#522881 65%,#2a123c)}
+    .mobile-cart .cartridge-shell img{height:100%;object-fit:fill;border-radius:5%;filter:none}
     .color-hit{left:50.8%;top:72%;width:18.5%;height:20%}
     .museum-hit{left:70.2%;top:72%;width:20%;height:20%}
-    .mobile-cart .cartridge-label{width:100%;max-width:225px;aspect-ratio:1.7;border-width:7px;padding:8px;font-size:clamp(14px,3.5vw,22px)}
     .secret-book{left:95.1%;top:27.4%;width:2.05%;height:11%;z-index:10}
     .mobile-secret-book{position:absolute;right:1%;top:-20px;width:34px;height:58px;border:1px solid #73331f;border-radius:3px;z-index:5;background:#a74723 url("assets/arcade-room.webp?v=downhill-art-2") 97.2% 30.9%/5225% 941% no-repeat;box-shadow:0 2px 4px #000a;touch-action:manipulation}
     #bookDialog input{display:block;width:100%;padding:.7rem;background:#170f20;color:inherit;border:1px solid #ca8558;border-radius:4px;font:inherit}
@@ -36,8 +35,8 @@
     </div>
     <button class="scene-hit moonie-hit" data-game="moonies" aria-label="Play Moonie's Fun Farm"></button>
     <button class="scene-hit fish-hit" data-game="fish" aria-label="Play Fish Is Fish"></button>
-    <button class="scene-hit color-hit" data-game="color" aria-label="Play Color It Alive"><span class="cartridge-label color-label" aria-hidden="true">COLOR IT ALIVE</span></button>
-    <button class="scene-hit museum-hit" data-game="museum" aria-label="Play The Museum"><span class="cartridge-label museum-label" aria-hidden="true">THE MUSEUM</span></button>
+    <button class="scene-hit color-hit" data-game="color" aria-label="Play Color It Alive"><img class="cartridge-art" src="assets/color-it-alive-label.webp" alt="" draggable="false"></button>
+    <button class="scene-hit museum-hit" data-game="museum" aria-label="Play The Museum"><img class="cartridge-art" src="assets/the-museum-label.webp" alt="" draggable="false"></button>
     <button class="scene-hit console-hit" id="consoleHit" aria-label="Eject game cartridge" title="Eject cartridge"></button>
     <button class="screen-fs desktop-fs" id="desktopFullscreen" aria-label="Play in fullscreen">⛶ <span>FULLSCREEN</span></button>
     <button class="scene-hit secret-book" type="button" data-secret-book aria-label="Open the orange book" aria-haspopup="dialog"></button>
@@ -57,8 +56,8 @@
   <div class="mobile-cartridges" id="mobileCartridges">
     <button class="mobile-cart" data-game="moonies"><img src="assets/moonies.webp" alt=""/><span>MOONIE'S FUN FARM</span></button>
     <button class="mobile-cart" data-game="fish"><img src="assets/fish.webp" alt=""/><span>FISH IS FISH</span></button>
-    <button class="mobile-cart" data-game="color"><span class="cartridge-label color-label">COLOR IT ALIVE</span></button>
-    <button class="mobile-cart" data-game="museum"><span class="cartridge-label museum-label">THE MUSEUM</span></button>
+    <button class="mobile-cart" data-game="color"><span class="cartridge-shell color-shell"><img class="cartridge-art" src="assets/color-it-alive-label.webp" alt="" draggable="false"></span><span>COLOR IT ALIVE</span></button>
+    <button class="mobile-cart" data-game="museum"><span class="cartridge-shell museum-shell"><img class="cartridge-art" src="assets/the-museum-label.webp" alt="" draggable="false"></span><span>THE MUSEUM</span></button>
   </div>
   <p class="desktop-helper">Click a cartridge in the scene above, or use <kbd>1</kbd>–<kbd>4</kbd> to select a game. <kbd>F</kbd> fullscreen · <kbd>E</kbd> eject.</p>
 </section>
