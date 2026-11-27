@@ -3,7 +3,7 @@
 const catalog = Object.freeze({
   moonies:{title:"Moonie's Fun Farm",url:'games/moonies-fun-farm/index.html',art:'assets/moonies.webp'},
   fish:{title:'Fish Is Fish',url:'games/fish-is-fish/index.html',art:'assets/fish.webp'},
-  color:{title:'Color It Alive',url:'games/color-it-alive/index.html'},
+  color:{title:'Color It Alive',url:(/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?'games/color-it-alive/play.html':'games/color-it-alive/index.html'},
   museum:{title:'The Museum',url:'games/the-museum/index.html'}
 });
 const $ = id=>document.getElementById(id);
