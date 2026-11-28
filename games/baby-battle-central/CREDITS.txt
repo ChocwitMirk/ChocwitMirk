@@ -18,3 +18,7 @@ Treat + trap models: cake / cookies / candy packs from the studio asset folder (
 Little Explorer character + the shared animation set (Mixamo-style clips on a rigify rig) from the studio asset folder;
 his clips are retargeted by bone name onto Baby A and Baby B.
 Engine: three.js (MIT licence), loaded from the jsDelivr CDN.
+
+"Air Balloons" by leha_pu (CC BY 4.0), adapted as a single tethered balloon.
+https://sketchfab.com/3d-models/air-balloons-72fedbfe779d475586e31f2ef2920d2e
+Balloon pop audio supplied by the studio from Universfield, freesound_community, and professionalsfx.

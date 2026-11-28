@@ -9,17 +9,16 @@
 <meta name="apple-mobile-web-app-title" content="Baby Battle">
 <meta name="theme-color" content="#15121f">
 <title>Baby Battle Central | Chocwit Mirk Studios</title>
-<meta name="description" content="Baby Battle Central: an early playable last-baby-standing browser game with solo bots, practice, and peer-to-peer rooms.">
+<meta name="description" content="Play Baby Battle Central with solo bots, practice, and online rooms.">
 <!--
   BABY BATTLE CENTRAL — Chocwit Mirk Studios
-  Early playable browser build: solo battle, practice, and PeerJS-powered host/join rooms.
-  This is not a final release; network play requires an internet connection.
+  Phase 1: exploration prototype (single player, no backend).
 
   HOW TO RUN
-  - Open the hosted game in a modern browser. Internet is required to load Three.js,
-    and online rooms use PeerJS.
-  - Optimized 3D models load from assets/models/*.js and recorded audio from assets/sounds/.
-    Asset attribution is in CREDITS.txt.
+  - Keep the "assets" folder next to index.html. Double-click index.html in Chrome / Edge /
+    Firefox. Internet is needed so Three.js can load from the jsDelivr CDN.
+  - Models are packed as assets/models/*.js (base64 GLB) so they load even from file://.
+    If a model is missing, a placeholder box/primitive is shown and the game still runs.
   - Phones: host the folder (e.g. itch.io HTML upload, GitHub Pages, Netlify) and open the link.
   - Houses: "Import map" / "Export map" read and write Chocwit Mirk World Editor .cmworld files.
     Edit them in "House Editor.html" (see "MAP EDITOR - README.txt"). Format notes: CORE, MAP IMPORT / EXPORT.
@@ -72,6 +71,9 @@
   #heldBox{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);color:#fff;font-weight:800;font-size:16px;text-shadow:1px 1px 0 #2b2240;white-space:nowrap}
   #heldBox span{font-size:12px;opacity:.8;font-weight:700;margin-left:6px}
   #modeBar{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(20,16,36,.7);color:#fff;font:800 17px system-ui;padding:6px 16px;border-radius:12px;white-space:nowrap;pointer-events:none}
+  #hideMap{position:absolute;right:12px;top:48px;width:clamp(100px,20vw,156px);padding:7px;box-sizing:border-box;border:1px solid #756987;border-radius:10px;background:rgba(20,16,36,.88);color:#fff;pointer-events:none}
+  #hideMap canvas{display:block;width:100%;height:auto;border-radius:6px}
+  #hideMapDistance{text-align:center;margin-top:4px;font:800 12px system-ui;white-space:nowrap}
   #modeBar b{color:#ffd54a} #modeBar.it{background:rgba(200,30,70,.85)} #modeBar.zomb{background:rgba(60,120,40,.9)} #modeBar.cold{background:rgba(40,120,200,.85)}
   #blind{position:absolute;inset:0;background:#0b0816;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font:900 30px system-ui;text-align:center;pointer-events:none}
   #blind small{font-size:17px;font-weight:700;opacity:.8;margin-top:8px}
@@ -131,6 +133,7 @@
   #tFull{right:calc(68px + env(safe-area-inset-right))}
   body.touch #hint .kb{display:none} body:not(.touch) #hint .tc{display:none}
   #hint .pd{display:none} body.pad #hint .pd{display:inline} body.pad #hint .kb,body.pad #hint .tc{display:none}
+  .skinChoice[aria-pressed="true"]{background:#b8f0a8}
   button.padFocus{outline:4px solid #ffd54a;outline-offset:3px;transform:scale(1.04)}
   #padChip{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(20,16,36,.8);color:#fff;padding:6px 12px;border-radius:10px;font:700 13px system-ui;z-index:60;pointer-events:none;transition:opacity .4s}
   body.touch #prompt{top:auto;bottom:calc(210px + env(safe-area-inset-bottom));right:calc(16px + env(safe-area-inset-right));left:auto;transform:none}
@@ -170,6 +173,10 @@
   <div id="heldBox"></div>
   <div id="aliveBox"></div>
   <div id="modeBar" class="hidden"></div>
+  <aside id="hideMap" class="hidden" aria-label="Seeker proximity">
+    <canvas id="hideMapCanvas" width="288" height="216" aria-hidden="true"></canvas>
+    <div id="hideMapDistance"></div>
+  </aside>
   <div id="blind" class="hidden"></div>
   <div id="feed"></div>
 </div>
@@ -207,6 +214,18 @@
     <div class="sub" id="loadInfo">Loading furniture…</div>
     <div class="sub">Phase 2 · Last Baby Standing · punch, kick, bonk, shoot, zap &amp; drive</div>
     <div id="loadErr"></div>
+  </div>
+</div>
+
+<div id="skinPicker" class="overlay hidden">
+  <div class="panel">
+    <h2>Choose your baby</h2>
+    <button class="big skinChoice" data-skin="baby_a" aria-pressed="false">Baby A</button>
+    <button class="big skinChoice" data-skin="baby_b" aria-pressed="false">Baby B</button>
+    <button class="big skinChoice" data-skin="explorer" aria-pressed="false">Little Explorer</button>
+    <div class="sub hidden" id="skinStatus" aria-live="polite"></div>
+    <button class="big pink" id="skinConfirm" disabled>Continue</button>
+    <button class="big gray" id="skinBack">Back</button>
   </div>
 </div>
 
@@ -265,9 +284,7 @@
     Furniture, appliances, babies, doors, handgun &amp; props: Meshy AI models generated for Chocwit Mirk Studios.<br><br>
     <b>Licensed models (CC BY 4.0)</b><br>
     “Shotgun” by Pieter Ferreira — <a href="https://sketchfab.com/3d-models/shotgun-120ea3daf7f844999f56caac1b4a1c84" target="_blank" rel="noopener">Sketchfab</a><br>
-    “Subaru Impreza STi 22B Stylized Toon” by Ponter — <a href="https://sketchfab.com/3d-models/subaru-impreza-sti-22b-stylized-toon-f4d3ade10cad4f71beb5db56650ac53d" target="_blank" rel="noopener">Sketchfab</a><br>
-    “Mitsubishi Lancer Evolution V Stylized Toon” by Ponter — Sketchfab<br>
-    “Lolita '91 - Low poly model” by Daniel Zhabotinsky — <a href="https://sketchfab.com/3d-models/lolita-91-low-poly-model-128691a403ec4dd5af28c2e7c9037a3a" target="_blank" rel="noopener">Sketchfab</a><br>
+    Minivan and lava texture supplied by Chocwit Mirk Studios.<br>
     Licence: <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">creativecommons.org/licenses/by/4.0</a>. Models were optimised (decimated, re-textured, toon-shaded).<br><br>
     Engine: three.js (MIT).
     <button class="big gray" id="btnCreditsBack">Back</button>
@@ -289,7 +306,6 @@
     <div class="row"><label for="sDebug">Debug overlay (F3)</label><input id="sDebug" type="checkbox"></div>
     <div class="row"><label for="sOutline">Cartoon outlines (after reload)</label><input id="sOutline" type="checkbox"></div>
     <div class="row"><label for="sBots">Bot babies in battle</label><input id="sBots" type="range" min="1" max="7" step="1"><output id="oBots"></output></div>
-    <div class="row"><label for="sSkin">Baby</label><select id="sSkin" style="font:700 14px system-ui;padding:4px;border-radius:8px"><option value="random">Random each match</option><option value="baby_a">Baby A</option><option value="baby_b">Baby B</option><option value="explorer">Little Explorer</option></select></div>
     <button class="big gray" id="btnSettingsBack">Back</button>
   </div>
 </div>
@@ -454,7 +470,7 @@ const specs = [];      // render descriptions (consumed by the GAME module)
 const colliders = [];  // axis-aligned boxes
 
 // Dimensions of the optimised GLB models (model units), injected by the asset build step.
-const MODEL_DIMS = /*MODEL_DIMS*/{"aircon":{"min":[-0.9362,-0.6996,-0.4775],"max":[0.9465,0.7073,0.4667],"color":6248015},"amp":{"min":[-0.9482,-0.7971,-0.4719],"max":[0.9447,0.7842,0.4706],"color":3354668},"armchair_blue":{"min":[-0.9314,-0.9615,-0.7988],"max":[0.9286,0.9512,0.7944],"color":3297667},"armchair_brown":{"min":[-0.4941,-0.5,-0.4805],"max":[0.4961,0.5,0.4805],"color":6967085},"baby_a":{"min":[-0.7897999882698059,0.0,-0.22859999537467957],"max":[0.7897999882698059,1.7000000476837158,0.22859999537467957],"color":4535342},"baby_b":{"min":[-0.7508000135421753,0.00039999998989515007,-0.19850000739097595],"max":[0.7505999803543091,1.6999000310897827,0.1981000006198883],"color":12688269},"bed_metal":{"min":[-0.5499,-0.4481,-0.9491],"max":[0.5499,0.4442,0.9491],"color":13151355},"books_classic":{"min":[-0.9975,-0.6805,-0.4665],"max":[0.9962,0.6678,0.463],"color":7695202},"books_stack":{"min":[-0.9312,-0.6313,-1.0045],"max":[0.9239,0.6354,1.0012],"color":9527613},"bookshelf":{"min":[-0.9546,-0.9023,-0.2158],"max":[0.9534,0.8858,0.2136],"color":5782568},"boombox":{"min":[-0.9464,-0.5368,-0.3185],"max":[0.9442,0.5304,0.3301],"color":4802887},"car_lancer":{"min":[-0.8915,0.0021,-2.1907],"max":[0.8981,1.3839,2.093],"color":7890000},"car_lolita":{"min":[-1.9702,-0.0,-0.9305],"max":[1.9702,1.2105,0.9305],"color":15793525},"car_subaru":{"min":[-0.9416,-0.0026,-2.1985],"max":[0.9416,1.3083,2.1216],"color":7890000},"chair_wood":{"min":[-0.4354,-0.9591,-0.4997],"max":[0.435,0.9513,0.5013],"color":4664347},"computer":{"min":[-0.9472,-0.7519,-0.9043],"max":[0.9483,0.7496,0.9026],"color":11773831},"door":{"min":[-0.4144,-0.9523,-0.0721],"max":[0.4127,0.95,0.0702],"color":7355431},"fridge":{"min":[-0.4579,-1.0,-0.5031],"max":[0.4579,1.0,0.5031],"color":5460819},"gaiwan":{"min":[-0.4369,-0.946,-0.5017],"max":[0.4375,0.9483,0.5049],"color":6172957},"garbage_bags":{"min":[-0.9279,-0.9563,-0.6607],"max":[0.936,0.9385,0.6533],"color":3289907},"guitar_acoustic":{"min":[-0.3468,-0.953,-0.0995],"max":[0.3473,0.9511,0.1012],"color":9657136},"guitar_golden":{"min":[-0.3404,-0.9447,-0.3048],"max":[0.3365,0.9481,0.2705],"color":6835761},"handgun":{"min":[-0.9549,-0.6157,-0.1743],"max":[0.9521,0.6145,0.1758],"color":4999753},"harmony":{"min":[-0.7953,-0.3828,-0.2716],"max":[0.7954,0.3837,0.2857],"color":9135179},"hearth":{"min":[-0.9566,-0.7608,-0.4216],"max":[0.9547,0.7601,0.4219],"color":4994603},"lamp":{"min":[-0.2737,-0.5,-0.2736],"max":[0.2738,0.5009,0.2756],"color":7228974},"memories":{"min":[-0.4636,-0.9508,-0.4592],"max":[0.4619,0.9488,0.4575],"color":13153943},"microwave":{"min":[-0.953,-0.5342,-0.5851],"max":[0.953,0.5342,0.5851],"color":12369084},"music_box":{"min":[-0.9519,-0.9388,-0.9188],"max":[0.9509,0.9436,0.9147],"color":4008216},"office_chair":{"min":[-0.5782,-0.949,-0.5874],"max":[0.6054,0.9537,0.5879],"color":4013630},"owl":{"min":[-0.6296,-0.9526,-0.3438],"max":[0.6299,0.9488,0.319],"color":9921345},"piano":{"min":[-0.9678,-0.7767,-0.4214],"max":[0.96,0.7996,0.4134],"color":6238230},"plant":{"min":[-0.4901,-0.9506,-0.4939],"max":[0.4852,0.9488,0.5039],"color":5406235},"radiator":{"min":[-0.9432,-0.9064,-0.2665],"max":[0.9424,0.9045,0.2771],"color":13347974},"range":{"min":[-0.6568,-0.951,-0.6551],"max":[0.6549,0.9535,0.6499],"color":10129796},"shotgun":{"min":[-3.7227,-0.8664,-0.2336],"max":[3.7136,0.8567,0.2333],"color":3091499},"sink":{"min":[-0.8174,-0.9514,-0.4433],"max":[0.8136,0.939,0.439],"color":15395557},"sofa_plaid":{"min":[-1.0023,-0.4632,-0.4633],"max":[1.0006,0.455,0.4569],"color":5192749},"sofa_teal":{"min":[-0.9489,-0.3772,-0.4095],"max":[0.9469,0.3773,0.4063],"color":1725284},"threshold":{"min":[-0.4844,-0.9969,-0.1474],"max":[0.4844,0.9975,0.1369],"color":8473649},"toilet_dirty":{"min":[-0.3242,-0.5,-0.4844],"max":[0.3242,0.5,0.4844],"color":8024412},"toilet_throne":{"min":[-0.5209,-0.9504,-0.8315],"max":[0.5186,0.9502,0.8336],"color":16514043},"toilet_white":{"min":[-0.4595,-0.952,-0.7706],"max":[0.4587,0.951,0.7681],"color":16777215},"trash_green":{"min":[9.6927,-2.7719,8.2805],"max":[10.5019,-1.9344,8.7652],"color":5459772},"trash_metal":{"min":[-0.575,-0.9507,-0.5647],"max":[0.6117,0.9426,0.5627],"color":8223604},"tub_claw":{"min":[-0.5,-0.1934,-0.2441],"max":[0.5,0.1943,0.2441],"color":10261122},"tub_rect":{"min":[-0.9463,-0.2081,-0.4353],"max":[0.9444,0.2094,0.4336],"color":13287594},"tv":{"min":[-0.9522,-0.718,-0.6972],"max":[0.9516,0.7167,0.7142],"color":2631201},"wardrobe":{"min":[-0.4906,-0.9508,-0.3319],"max":[0.4887,0.9488,0.3207],"color":9002290},"spike_trap":{"min":[-0.9995,-0.1833,-0.9601],"max":[0.9889,0.1831,0.9622],"color":6707800},"cake_rainbow":{"min":[0.23,-0.0,0.79],"max":[0.63,0.2662,1.19],"color":14134646},"cake_chocolate":{"min":[-0.63,-0.0,0.79],"max":[-0.23,0.2662,1.19],"color":5711385},"cake_strawberry":{"min":[-1.06,-0.0,0.79],"max":[-0.66,0.2662,1.19],"color":16087435},"cookie_a":{"min":[-1.1746,-0.0,0.14],"max":[-0.9346,0.0299,0.38],"color":15108176},"cookie_c":{"min":[0.9855,-0.0,0.1402],"max":[1.2252,0.04,0.3798],"color":15439958},"candy_swirl":{"min":[0.74,0.0,0.3603],"max":[0.98,0.05,0.5997],"color":16491443},"candy_gumdrop":{"min":[1.6796,-0.0,0.5996],"max":[1.9204,0.0656,0.8404],"color":11657277},"candy_cane":{"min":[3.885,0.015,-0.123],"max":[3.9914,0.045,0.29],"color":16351109},"explorer":{"min":[-0.4309999942779541,-0.0,-0.2483000010251999],"max":[0.4309999942779541,1.7000000476837158,0.2483000010251999],"color":14196858},"cookie_jar":{"min":[-1.2294,0.01,-0.4248],"max":[-0.6199,0.64,0.1848],"color":13154464},"candy_jar":{"min":[1.6275,-0.0,-0.5125],"max":[1.9525,0.48,-0.1875],"color":13154464}}/*END_MODEL_DIMS*/;
+const MODEL_DIMS = /*MODEL_DIMS*/{"aircon":{"min":[-0.9362,-0.6996,-0.4775],"max":[0.9465,0.7073,0.4667],"color":6248015},"amp":{"min":[-0.9482,-0.7971,-0.4719],"max":[0.9447,0.7842,0.4706],"color":3354668},"armchair_blue":{"min":[-0.9314,-0.9615,-0.7988],"max":[0.9286,0.9512,0.7944],"color":3297667},"armchair_brown":{"min":[-0.4941,-0.5,-0.4805],"max":[0.4961,0.5,0.4805],"color":6967085},"baby_a":{"min":[-0.7897999882698059,0,-0.22859999537467957],"max":[0.7897999882698059,1.7000000476837158,0.22859999537467957],"color":4535342},"baby_b":{"min":[-0.7508000135421753,0.00039999998989515007,-0.19850000739097595],"max":[0.7505999803543091,1.6999000310897827,0.1981000006198883],"color":12688269},"bed_metal":{"min":[-0.5499,-0.4481,-0.9491],"max":[0.5499,0.4442,0.9491],"color":13151355},"books_classic":{"min":[-0.9975,-0.6805,-0.4665],"max":[0.9962,0.6678,0.463],"color":7695202},"books_stack":{"min":[-0.9312,-0.6313,-1.0045],"max":[0.9239,0.6354,1.0012],"color":9527613},"bookshelf":{"min":[-0.9546,-0.9023,-0.2158],"max":[0.9534,0.8858,0.2136],"color":5782568},"boombox":{"min":[-0.9464,-0.5368,-0.3185],"max":[0.9442,0.5304,0.3301],"color":4802887},"chair_wood":{"min":[-0.4354,-0.9591,-0.4997],"max":[0.435,0.9513,0.5013],"color":4664347},"computer":{"min":[-0.9472,-0.7519,-0.9043],"max":[0.9483,0.7496,0.9026],"color":11773831},"door":{"min":[-0.4144,-0.9523,-0.0721],"max":[0.4127,0.95,0.0702],"color":7355431},"fridge":{"min":[-0.4579,-1,-0.5031],"max":[0.4579,1,0.5031],"color":5460819},"gaiwan":{"min":[-0.4369,-0.946,-0.5017],"max":[0.4375,0.9483,0.5049],"color":6172957},"garbage_bags":{"min":[-0.9279,-0.9563,-0.6607],"max":[0.936,0.9385,0.6533],"color":3289907},"guitar_acoustic":{"min":[-0.3468,-0.953,-0.0995],"max":[0.3473,0.9511,0.1012],"color":9657136},"guitar_golden":{"min":[-0.3404,-0.9447,-0.3048],"max":[0.3365,0.9481,0.2705],"color":6835761},"handgun":{"min":[-0.9549,-0.6157,-0.1743],"max":[0.9521,0.6145,0.1758],"color":4999753},"harmony":{"min":[-0.7953,-0.3828,-0.2716],"max":[0.7954,0.3837,0.2857],"color":9135179},"hearth":{"min":[-0.9566,-0.7608,-0.4216],"max":[0.9547,0.7601,0.4219],"color":4994603},"lamp":{"min":[-0.2737,-0.5,-0.2736],"max":[0.2738,0.5009,0.2756],"color":7228974},"memories":{"min":[-0.4636,-0.9508,-0.4592],"max":[0.4619,0.9488,0.4575],"color":13153943},"microwave":{"min":[-0.953,-0.5342,-0.5851],"max":[0.953,0.5342,0.5851],"color":12369084},"music_box":{"min":[-0.9519,-0.9388,-0.9188],"max":[0.9509,0.9436,0.9147],"color":4008216},"office_chair":{"min":[-0.5782,-0.949,-0.5874],"max":[0.6054,0.9537,0.5879],"color":4013630},"owl":{"min":[-0.6296,-0.9526,-0.3438],"max":[0.6299,0.9488,0.319],"color":9921345},"piano":{"min":[-0.9678,-0.7767,-0.4214],"max":[0.96,0.7996,0.4134],"color":6238230},"plant":{"min":[-0.4901,-0.9506,-0.4939],"max":[0.4852,0.9488,0.5039],"color":5406235},"radiator":{"min":[-0.9432,-0.9064,-0.2665],"max":[0.9424,0.9045,0.2771],"color":13347974},"range":{"min":[-0.6568,-0.951,-0.6551],"max":[0.6549,0.9535,0.6499],"color":10129796},"shotgun":{"min":[-3.7227,-0.8664,-0.2336],"max":[3.7136,0.8567,0.2333],"color":3091499},"sink":{"min":[-0.8174,-0.9514,-0.4433],"max":[0.8136,0.939,0.439],"color":15395557},"sofa_plaid":{"min":[-1.0023,-0.4632,-0.4633],"max":[1.0006,0.455,0.4569],"color":5192749},"sofa_teal":{"min":[-0.9489,-0.3772,-0.4095],"max":[0.9469,0.3773,0.4063],"color":1725284},"threshold":{"min":[-0.4844,-0.9969,-0.1474],"max":[0.4844,0.9975,0.1369],"color":8473649},"toilet_dirty":{"min":[-0.3242,-0.5,-0.4844],"max":[0.3242,0.5,0.4844],"color":8024412},"toilet_throne":{"min":[-0.5209,-0.9504,-0.8315],"max":[0.5186,0.9502,0.8336],"color":16514043},"toilet_white":{"min":[-0.4595,-0.952,-0.7706],"max":[0.4587,0.951,0.7681],"color":16777215},"trash_green":{"min":[9.6927,-2.7719,8.2805],"max":[10.5019,-1.9344,8.7652],"color":5459772},"trash_metal":{"min":[-0.575,-0.9507,-0.5647],"max":[0.6117,0.9426,0.5627],"color":8223604},"tub_claw":{"min":[-0.5,-0.1934,-0.2441],"max":[0.5,0.1943,0.2441],"color":10261122},"tub_rect":{"min":[-0.9463,-0.2081,-0.4353],"max":[0.9444,0.2094,0.4336],"color":13287594},"tv":{"min":[-0.9522,-0.718,-0.6972],"max":[0.9516,0.7167,0.7142],"color":2631201},"wardrobe":{"min":[-0.4906,-0.9508,-0.3319],"max":[0.4887,0.9488,0.3207],"color":9002290},"spike_trap":{"min":[-0.9995,-0.1833,-0.9601],"max":[0.9889,0.1831,0.9622],"color":6707800},"cake_rainbow":{"min":[0.23,0,0.79],"max":[0.63,0.2662,1.19],"color":14134646},"cake_chocolate":{"min":[-0.63,0,0.79],"max":[-0.23,0.2662,1.19],"color":5711385},"cake_strawberry":{"min":[-1.06,0,0.79],"max":[-0.66,0.2662,1.19],"color":16087435},"cookie_a":{"min":[-1.1746,0,0.14],"max":[-0.9346,0.0299,0.38],"color":15108176},"cookie_c":{"min":[0.9855,0,0.1402],"max":[1.2252,0.04,0.3798],"color":15439958},"candy_swirl":{"min":[0.74,0,0.3603],"max":[0.98,0.05,0.5997],"color":16491443},"candy_gumdrop":{"min":[1.6796,0,0.5996],"max":[1.9204,0.0656,0.8404],"color":11657277},"candy_cane":{"min":[3.885,0.015,-0.123],"max":[3.9914,0.045,0.29],"color":16351109},"explorer":{"min":[-0.4309999942779541,0,-0.2483000010251999],"max":[0.4309999942779541,1.7000000476837158,0.2483000010251999],"color":14196858},"cookie_jar":{"min":[-1.2294,0.01,-0.4248],"max":[-0.6199,0.64,0.1848],"color":13154464},"candy_jar":{"min":[1.6275,0,-0.5125],"max":[1.9525,0.48,-0.1875],"color":13154464},"car_minivan":{"min":[-0.4292379915714264,-0.38786596059799194,-0.9500110149383545],"max":[0.4294559955596924,0.3867639899253845,0.9507359266281128],"color":15000804}}/*END_MODEL_DIMS*/;
 const PLACEMENTS = []; // 3D model placements (rendered by the GAME module; colliders are made here)
 let curGroup = null;   // primitives made inside withGroup() are hidden once that model loads
 function withGroup(id, fn) { const g = curGroup; curGroup = id; fn(); curGroup = g; }
@@ -531,22 +547,28 @@ function cabinet(id, model, room, o) {
   return p;
 }
 // Furniture a baby can grab and drag around (to climb on, or to barricade a door)
-const PUSHABLE = { chair_wood: 'chair', office_chair: 'office chair', trash_metal: 'trash can', trash_green: 'bin', plant: 'plant', boombox: 'boombox', amp: 'amp', armchair_brown: 'armchair' };
+const PUSHABLE = { chair_wood: 'chair', gaiwan: 'chair', office_chair: 'office chair', trash_metal: 'trash can', trash_green: 'bin', plant: 'plant', boombox: 'boombox', amp: 'amp', armchair_brown: 'armchair' };
 function furnitureCols(p) { if (!p.cols) p.cols = colliders.filter(c => c.tag && (c.tag === p.room + ':' + p.id || c.tag.startsWith(p.room + ':' + p.id + ':'))); return p.cols; }
 function grabFurniture(f, p) {
   if (!f.alive || f.held || f.inCar || !PUSHABLE[p.model]) return false;
   for (const g of fighters) if (g.grab === p.id) return false;           // someone else has it
   f.grab = p.id; p.pushable = true; furnitureCols(p);
+  if (p.collide === 'chair') f.grabOffset = { x: p.x - f.s.x, z: p.z - f.s.z };
   emit({ type: 'grab', f: f.id, name: PUSHABLE[p.model] });
   return true;
 }
 function shiftPlacement(p, dx, dz) {
   if (!dx && !dz) return;
   if (p.homeX == null) { p.homeX = p.x; p.homeZ = p.z; }
-  for (const c of furnitureCols(p)) { c.minX += dx; c.maxX += dx; c.minZ += dz; c.maxZ += dz; }
+  const cols = furnitureCols(p);
+  for (const c of cols) { c.minX += dx; c.maxX += dx; c.minZ += dz; c.maxZ += dz; }
+  for (const perch of match.perches || []) if (cols.includes(perch.collider)) {
+    perch.x += dx; perch.minX += dx; perch.maxX += dx;
+    perch.z += dz; perch.minZ += dz; perch.maxZ += dz;
+  }
   p.x += dx; p.z += dz; p.box.minX += dx; p.box.maxX += dx; p.box.minZ += dz; p.box.maxZ += dz; p.moved = true; p.pushable = true;
 }
-function releaseFurniture(f) { if (!f.grab) return; const id = f.grab; f.grab = null; emit({ type: 'letGo', f: f.id, id }); }
+function releaseFurniture(f) { if (!f.grab) return; const id = f.grab; f.grab = null; f.grabOffset = null; emit({ type: 'letGo', f: f.id, id }); }
 // each frame: the grabbed thing slides to stay just in front of the baby (if there's room)
 function updateFurniture(dt) {
   for (const f of fighters) {
@@ -556,7 +578,8 @@ function updateFurniture(dt) {
     const b = p.box, hx = (b.maxX - b.minX) / 2, hz = (b.maxZ - b.minZ) / 2;
     const fx = -Math.sin(f.yaw), fz = -Math.cos(f.yaw);
     const reach = PLAYER.radius + 0.04 + Math.abs(fx) * hx + Math.abs(fz) * hz;
-    const gx = f.s.x + fx * reach, gz = f.s.z + fz * reach, cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
+    const gx = f.s.x + (f.grabOffset?.x ?? fx * reach), gz = f.s.z + (f.grabOffset?.z ?? fz * reach);
+    const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
     if (Math.hypot(gx - cx, gz - cz) > 1.2) { releaseFurniture(f); continue; }       // lost hold of it
     let dx = gx - cx, dz = gz - cz; const L = Math.hypot(dx, dz), mx = 1.6 * dt;
     if (L < 1e-4) continue;
@@ -569,9 +592,7 @@ function updateFurniture(dt) {
       if (ok) for (const g of fighters) if (g !== f && g.alive && moved.some(m => overlap(playerBox(g.s), m))) { ok = false; break; }
       cols.forEach(c => { c.enabled = true; });
       if (!ok) return false;
-      cols.forEach((c, i) => Object.assign(c, { minX: moved[i].minX, maxX: moved[i].maxX, minZ: moved[i].minZ, maxZ: moved[i].maxZ }));
-      if (p.homeX == null) { p.homeX = p.x; p.homeZ = p.z; }
-      p.x += mx_; p.z += mz_; b.minX += mx_; b.maxX += mx_; b.minZ += mz_; b.maxZ += mz_; p.moved = true;
+      shiftPlacement(p, mx_, mz_);
       return true;
     };
     if (!tryMove(dx, dz)) { if (!tryMove(dx, 0)) tryMove(0, dz); }                   // slide along walls
@@ -606,6 +627,7 @@ function searchDrawer(f, dr) {
   let r = Math.random() * tot, type = 'block';
   for (const [t, w] of DRAWER_LOOT) { if ((r -= w) <= 0) { type = t; break; } }
   if (dr.stash) { type = dr.stash; dr.stash = null; }
+  if ((match.mode === 'balloon' || match.mode === 'keepy') && !MELEE[type]?.thr && !POWERUPS[type]) type = 'block';
   const px = dr.x + dr.nx * 0.28, pz = dr.z + dr.nz * 0.28;
   const pu = POWERUPS[type];
   const it = { id: 'i' + (++itemSeq), type, x: px, y: 0, z: pz, holder: null, ammo: type === 'pistol' ? COMBAT.pistol.ammo : 0,
@@ -751,7 +773,10 @@ function chairM(room, cx, cz, face, model) {
   const id = 'chair' + (++chairN);
   const n0 = colliders.length;
   withGroup(id, () => chair(room, cx, cz, face, COL.woodLight));   // colliders + fallback look
-  for (let i = n0; i < colliders.length; i++) colliders[i].tag = room + ':' + id;   // so the chair can be dragged with its colliders
+  for (let i = n0; i < colliders.length; i++) {
+    colliders[i].tag = room + ':' + id;
+    if (i === n0) colliders[i].chairSeat = true; // legsTable emits the seat before the legs.
+  }
   place(id, model, room, { x: cx, z: cz, h: 0.95, rot, collide: false, fallback: false, template: 'chair' });
 }
 function radiator(room, id, x, z, rot) { place(id, 'radiator', room, { x, z, h: 0.7, rot }); }
@@ -763,7 +788,7 @@ function furnishKitchen() {
   box(r, 1.4, 3.2, 0, 0.86, 0.06, 0.62, COL.cabinet); box(r, 3.8, 4.6, 0, 0.86, 0.06, 0.62, COL.cabinet);
   // the cupboard under the counter at 3.2–3.8 is empty inside: a baby-sized hiding spot
   box(r, 3.2, 3.8, 0, 0.86, 0.06, 0.1, COL.cabinet); box(r, 3.2, 3.8, 0.8, 0.86, 0.1, 0.62, COL.cabinet);
-  makeDoor({ id: 'kitchenCupboard', name: 'Cupboard', room: r, hx: 3.22, hz: 0.6, dirX: 1, dirZ: 0, w: 0.56, h: 0.78, thick: 0.03, panelThick: 0.025, intoX: 0, intoZ: 1, startOpen: false, color: COL.cabinetDoor });
+  makeDoor({ id: 'kitchenCupboard', name: 'Cupboard', room: r, hx: 3.22, hz: 0.6, dirX: 1, dirZ: 0, w: 0.56, h: 0.78, thick: 0.03, panelThick: 0.025, intoX: 0, intoZ: 1, startOpen: false, color: COL.white });
   HIDE_EXTRA.push({ x: 3.5, z: 0.33, cab: 'kitchenCupboard', crouch: true });
   box(r, 0.06, 0.72, 0.86, 0.9, 0.06, 0.66, COL.counter);
   box(r, 1.38, 4.62, 0.86, 0.9, 0.06, 0.66, COL.counter);
@@ -1010,7 +1035,7 @@ function furnishGarage() {
   for (let y = 0.55; y < 2.2; y += 0.55) deco(r, -5.5, -1.0, y, y + 0.02, 0.08, 0.09, 0xbcbab4);
   deco(r, -3.4, -3.1, 0.35, 0.39, 0.08, 0.1, COL.metalDark);
   deco(r, -5.6, -0.9, 2.25, 2.32, 0.06, 0.1, COL.metalDark);
-  place('car', 'car_subaru', r, { x: -3.7, z: 2.95, d: 4.3, rot: Math.PI, color: COL.car });
+  place('car', 'car_minivan', r, { x: -3.7, z: 2.95, d: 4.3, rot: Math.PI, color: COL.car });
   cabinet('garageFridge', 'memories', r, { x: -0.49, z: 4.85, h: 1.7, rot: -HALF_PI, name: 'Old fridge' });   // the old retro fridge, retired to the garage
   place('garageTrash', 'trash_metal', r, { x: -2.35, z: 6.4, h: 0.7 });
   const bags = place('garbageBags', 'garbage_bags', r, { x: -1.6, z: 6.3, h: 0.6, collide: false });
@@ -1050,8 +1075,8 @@ function buildOutdoors() {
   for (let x = -13; x < 26; x += 2) deco(o, x, x + 1, -0.104, -0.1, -4.55, -4.45, 0xf2e3a0, k);
   deco(o, -5.6, -0.9, -0.115, -0.105, -2.4, 0, 0xa9a59c, k);                 // driveway
   deco(o, -6.7, 18.2, H + 0.08, H + 0.3, -0.2, 13.8, 0x6b4a3a, k);           // roof eaves
-  place('streetCar1', 'car_lancer', o, { x: 8.5, z: -3.4, d: 4.2, rot: HALF_PI, collide: false, color: 0xe8e2d0 });
-  place('streetCar2', 'car_lolita', o, { x: 15.5, z: -5.4, w: 4.1, rot: Math.PI, collide: false, color: 0xd04040 });
+  place('streetCar1', 'car_minivan', o, { x: 8.5, z: -3.4, d: 4.2, rot: HALF_PI, collide: false });
+  place('streetCar2', 'car_minivan', o, { x: 15.5, z: -5.4, d: 4.1, rot: -HALF_PI, collide: false });
   place('curbTub', 'tub_rect', o, { x: 1.6, z: -1.3, y: -0.11, w: 1.6, collide: false });      // bulky trash day
   place('curbThrone', 'toilet_throne', o, { x: 3.3, z: -1.2, y: -0.11, h: 0.8, rot: Math.PI, collide: false });
 }
@@ -1177,11 +1202,12 @@ function depenetrate(s) {
 }
 // ---- ledges: jump at a reachable edge (table, bed, counter...) to grab it, then climb up or drop
 const HANG = { hand: 0.54, reachMin: 0.42, reachMax: 0.64, near: 0.08, inset: 0.24, climbTime: 1.05 };
-function findLedge(s, wx, wz) {
+function findLedge(s, wx, wz, chairOnly = false) {
   const R = PLAYER.radius;
   let best = null;
   for (const c of colliders) {
     if (!c.enabled || (c.tag && c.tag.startsWith('door'))) continue;
+    if (chairOnly && !c.chairSeat) continue;
     const top = c.maxY, rel = top - s.y;
     if (rel < HANG.reachMin || rel > HANG.reachMax) continue;
     if (c.maxX - c.minX < 0.2 || c.maxZ - c.minZ < 0.2) continue;          // no grabbing thin legs / rails
@@ -1195,7 +1221,7 @@ function findLedge(s, wx, wz) {
     if (-(wx * nx + wz * nz) < 0.5) continue;                               // must be pushing into it
     const face = nx < 0 ? c.minX : nx > 0 ? c.maxX : nz < 0 ? c.minZ : c.maxZ;
     const hx = nx ? face + nx * (R + 0.003) : s.x, hz = nz ? face + nz * (R + 0.003) : s.z, hy = top - HANG.hand;
-    if (hy < -0.01) continue;
+    if (hy < -0.01 && !c.chairSeat) continue;
     // hands need air above the edge, and the hanging body must fit
     const ex = nx ? face - nx * 0.08 : s.x, ez = nz ? face - nz * 0.08 : s.z;
     if (firstOverlap({ minX: ex - 0.07, maxX: ex + 0.07, minY: top + 0.01, maxY: top + 0.18, minZ: ez - 0.07, maxZ: ez + 0.07 })) continue;
@@ -1255,7 +1281,7 @@ function stepPlayer(s, inp, dt) {
   s.standBlocked = !inp.crouch && s.crouched;
   s.height = s.crouched ? P.crouchHeight : P.height;
 
-  const speed = (s.crouched ? P.crouchSpeed : (inp.sprint ? P.sprintSpeed : P.walkSpeed)) * (s.speedMul || 1);
+  const speed = (s.crouched ? P.crouchSpeed : (inp.sprint && !s.walkOnly ? P.sprintSpeed : P.walkSpeed)) * (s.speedMul || 1);
   const k = Math.min(1, (s.grounded ? P.accel : P.airAccel) * dt);
   s.vx += (inp.dx * speed - s.vx) * k;
   s.vz += (inp.dz * speed - s.vz) * k;
@@ -1263,6 +1289,16 @@ function stepPlayer(s, inp, dt) {
   s.jumpBuffer = inp.jumpPressed ? 0.15 : Math.max(0, s.jumpBuffer - dt);
   s.coyote = s.grounded ? 0.1 : Math.max(0, s.coyote - dt);
   let jumped = false;
+  if (s.jumpBuffer > 0 && s.grounded && !s.crouched && !s.grabCD && (inp.dx || inp.dz)) {
+    const seat = findLedge(s, inp.dx, inp.dz, true);
+    if (seat?.canClimb) {
+      s.jumpBuffer = 0; s.coyote = 0; s.grounded = false;
+      s.climb = { t: 0, x0: s.x, y0: s.y, z0: s.z, x1: seat.tx, y1: seat.top + 0.001, z1: seat.tz,
+                  crouchEnd: seat.crouchEnd, nx: seat.nx, nz: seat.nz };
+      s.vx = s.vy = s.vz = 0;
+      return { climbStart: true };
+    }
+  }
   if (s.jumpBuffer > 0 && s.coyote > 0 && !s.crouched) {
     s.vy = Math.sqrt(2 * P.gravity * P.jumpHeight);
     s.jumpBuffer = 0; s.coyote = 0; jumped = true;
@@ -1356,6 +1392,7 @@ function findInteractable(s, yaw) {
 function interactLabel(it) {
   if (!it) return '';
   if (it.type === 'door') return it.ref.locked && !it.ref.target ? '🔒 Locked (L unlock · kick 3× or shoot the lock)' : (it.ref.target ? 'Close ' : 'Open ') + it.ref.name.toLowerCase() + (it.ref.target ? '' : ' · L lock');
+  if (it.type === 'furniture' && it.ref.collide === 'chair') return 'Grab chair · walk backward to pull it out';
   if (it.type === 'furniture') return 'Grab the ' + PUSHABLE[it.ref.model] + ' (drag it around)';
   if (it.type === 'drawer') return it.ref.emptyT > 0 ? 'Empty… (refills soon)' : 'Search the ' + it.ref.name.toLowerCase();
   const room = ROOM_BY_ID[it.ref.room].name;
@@ -1504,8 +1541,8 @@ const FURNITURE = {
   sink: { name: 'Pedestal Sink', fit: { h: 0.86 }, cat: 'Bathroom' },
   bed_metal: { name: 'Metal Bed', fit: { d: 2.2 }, collide: 'bed', cat: 'Bedroom' }, harmony: { name: 'Chest of Drawers', fit: { w: 1.5 }, cat: 'Bedroom' },
   owl: { name: 'Wooden Armoire', fit: { h: 1.85 }, cat: 'Bedroom' }, wardrobe: { name: 'Plain Wardrobe', fit: { h: 1.75 }, cat: 'Bedroom' },
-  car_subaru: { name: 'Subaru (toon)', fit: { d: 4.3 }, cat: 'Garage & Outside' }, car_lancer: { name: 'Lancer (toon)', fit: { d: 4.2 }, cat: 'Garage & Outside' },
-  car_lolita: { name: "Lolita '91", fit: { w: 4.1 }, cat: 'Garage & Outside' }, trash_metal: { name: 'Metal Trash Can', fit: { h: 0.7 }, cat: 'Garage & Outside' },
+  car_minivan: { name: 'Minivan', fit: { d: 4.3 }, cat: 'Garage & Outside' },
+  trash_metal: { name: 'Metal Trash Can', fit: { h: 0.7 }, cat: 'Garage & Outside' },
   garbage_bags: { name: 'Garbage Bags', fit: { h: 0.6 }, cat: 'Garage & Outside' }, aircon: { name: 'Air Conditioner', fit: { w: 0.66 }, cat: 'Garage & Outside' }
 };
 function naturalScale(model) {
@@ -1542,6 +1579,7 @@ function templateColliders(name, p) {
       minX = Math.min(minX, x); maxX = Math.max(maxX, x); minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
     }
     addCollider(minX, p.y + v0 * Hh, minZ, maxX, p.y + v1 * Hh, maxZ, p.room + ':' + p.id);
+    if (name === 'chair' && v0 === 0.44) colliders[colliders.length - 1].chairSeat = true;
   }
 }
 
@@ -1791,16 +1829,22 @@ function loadMap(input) {
     else { const r = Math.max(s[0], s[1], s[2]) / 2; sph(room, p[0], p[1] + r, p[2], r, color, opts); }
   }
   for (const r of ROOMS) if (!hasFixture.has(r.id)) ceilingFixture(r.id, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2);
+  // Older maps stored each vehicle at its own nominal length and model orientation.
+  const legacyCars = { car_subaru: { length: 4.3, turn: 0 }, car_lancer: { length: 4.2, turn: 0 }, car_lolita: { length: 4.1, turn: 1 } };
   // furniture models
   let fi = 0;
   for (const o of objs.filter(o => /^bbc\.f\./.test(o.assetId))) {
-    const model = o.assetId.slice(6);
+    const originalModel = o.assetId.slice(6);
+    const legacyCar = Object.hasOwn(legacyCars, originalModel) ? legacyCars[originalModel] : null;
+    const model = legacyCar ? 'car_minivan' : originalModel;
     if (!MODEL_DIMS || !MODEL_DIMS[model]) { warn('Unknown furniture model: ' + model); continue; }
     const p = pos(o), m = md(o), q = quarter(rotY(o), warn, 'Furniture ' + model);
     const k = Math.abs(scl(o)[0]) || 1;
     const collide = m.collide || (FURNITURE[model] && FURNITURE[model].collide) || 'box';
     const room = roomOf(p[0], p[2]);
-    const pl = place(String(m.id || model + '_' + (++fi)), model, room, { x: p[0], y: p[1], z: p[2], rot: q * HALF_PI, s: naturalScale(model) * k,
+    const scale = legacyCar ? k * legacyCar.length / (MODEL_DIMS.car_minivan.max[2] - MODEL_DIMS.car_minivan.min[2]) : naturalScale(model) * k;
+    const pl = place(String(m.id || model + '_' + (++fi)), model, room, { x: p[0], y: p[1], z: p[2],
+      rot: (q + (legacyCar?.turn || 0)) * HALF_PI, s: scale,
       collide: collide === 'box', fallback: true });
     if (pl) { pl.collide = collide; if (COLLIDER_TEMPLATES[collide]) templateColliders(collide, pl); }
   }
@@ -1960,6 +2004,10 @@ function resetItems() {
     if (ks.length) { const l = pick(ks); items.push({ id: 'i' + (++n), type: 'keys', x: l.x, y: l.y, z: l.z, spot: l.id, holder: null, ammo: 0 }); }
   }
   if (shotSpots.length && Math.random() < 0.45) { const l = pick(shotSpots); items.push({ id: 'i' + (++n), type: 'shotgun', x: l.x, y: l.y, z: l.z, spot: l.id, holder: null, ammo: COMBAT.shotgun.ammo }); }
+  if (match.mode === 'balloon' || match.mode === 'keepy') {
+    for (let i = items.length - 1; i >= 0; i--) if (!MELEE[items[i].type]?.thr) items.splice(i, 1);
+    for (const d of drawers) d.stash = null;
+  }
   itemSeq = n;
 }
 // treats + spike traps go on random open floor (needs the nav grid)
@@ -1977,11 +2025,13 @@ function floorSpot(room, notRoom) {
   }
   return null;
 }
-function spawnExtra(type) {
+function spawnExtra(type, room) {
+  if ((match.mode === 'balloon' || match.mode === 'keepy') && !MELEE[type]?.thr && !POWERUPS[type]) return null;
   const pu = POWERUPS[type];
   if (pu && pu.spot && (items.some(i => i.type === type) || !PLACEMENTS.some(q => q.id === 'oldToilet'))) return null;   // only in the default house
-  const p = pu && pu.spot ? pu.spot : floorSpot(pu && pu.room, pu && pu.notRoom); if (!p) return null;
+  const p = pu && pu.spot ? pu.spot : floorSpot(room || pu?.room, pu?.notRoom); if (!p) return null;
   const it = { id: 'i' + (++itemSeq), type, x: p.x, y: p.y, z: p.z, holder: null, ammo: 0, model: pu ? pu.models[Math.floor(Math.random() * pu.models.length)] : type === 'spikes' ? 'spike_trap' : null };
+  if (type === 'block') it.color = [0xe94b4b, 0x3f88e8, 0x4cbb6c, 0xf6c63b][itemSeq % 4];
   items.push(it); return it;
 }
 function spawnExtras() {
@@ -2037,6 +2087,7 @@ function itemNear(f, maxD) {
 }
 function pickUp(f, it) {
   if (!f.alive || f.down > 0 || !it || it.holder || it.placed || f.inCar) return false;
+  if ((match.mode === 'balloon' || match.mode === 'keepy') && !MELEE[it.type]?.thr && !POWERUPS[it.type]) return false;
   if (POWERUPS[it.type]) return eat(f, it);
   if (it.type === 'keys') { it.holder = f.id; it.pocket = true; f.hasKeys = true; emit({ type: 'pickup', f: f.id, item: 'keys', name: f.name }); return true; }
   if (f.held) dropHeld(f);
@@ -2094,18 +2145,180 @@ function knockDown(t, src) {
 //          set traps to slow the seeker down (no damage). Seeker knocks everyone out = seeker wins; time runs out = hiders win.
 const MODES = {
   battle: { name: 'Baby Brawl', blurb: 'Last baby standing' },
-  tag:    { name: 'Tag', blurb: 'Bonk someone to make them IT', limit: 120 },
+  tag:    { name: 'Tag', blurb: 'Bonk or throw a toy to pass IT', limit: 120 },
   freeze: { name: 'Freeze Tag', blurb: 'IT freezes, friends thaw', limit: 150 },
-  zombie: { name: 'Zombie Tag', blurb: 'Get bonked, join the horde', limit: 150 },
-  lava:   { name: 'Floor is Lava', blurb: 'Stay off the floor! Shove babies in', warn: 10, limit: 180 },
+  zombie: { name: 'Zombie Tag', blurb: 'Infect with hits, throws, or traps', limit: 150 },
+  keepy:  { name: 'Keepy Uppy', blurb: 'Keep one shared balloon off the floor. Last touch is safe', limit: 240 },
+  balloon: { name: 'Balloon Pop', blurb: 'Throw toys at balloons. Last balloon standing wins', limit: 180 },
+  lava:   { name: 'Floor is Lava', blurb: 'Climb above rising waves! Shove babies in', warn: 10, limit: 180 },
   hide:   { name: 'Hide & Seek', blurb: 'Hide… or get found and bonked', hideTime: 30, limit: 180 }
 };
+const LAVA_WAVE = { low: 0.07, firstPeak: 0.19, peakStep: 0.08, rise: 8, fall: 8, rest: 4 };
+const LAVA_WAVE_PERIOD = LAVA_WAVE.rise + LAVA_WAVE.fall + LAVA_WAVE.rest;
+
+const BALLOON_RADIUS = 0.16;
+const KEEPY_RADIUS = 0.21;
+function setupKeepy() {
+  const arena = ROOM_BY_ID.living || ROOMS.find(r => r.id !== 'outdoor');
+  const center = arena && { x: (arena.x0 + arena.x1) / 2, z: (arena.z0 + arena.z1) / 2 };
+  const open = p => spawnValid(p) && !firstOverlap(boxAt(p.x, 0.02, p.z, 1.7, 0.28));
+  const candidates = [];
+  if (center) for (let x = center.x - 2; x <= center.x + 2; x += 0.4) for (let z = center.z - 2; z <= center.z + 2; z += 0.4) {
+    const p = { x, z };
+    if (roomAt(x, z) === arena && open(p)) candidates.push(p);
+  }
+  candidates.sort((a, b) => Math.hypot(a.x - center.x, a.z - center.z) - Math.hypot(b.x - center.x, b.z - center.z));
+  const launch = candidates[0] || SPAWNS.find(open) || SPAWNS[0];
+  const spots = candidates.filter(p => Math.hypot(p.x - launch.x, p.z - launch.z) > 0.65);
+  const used = [];
+  for (const f of fighters) {
+    const p = spots.find(p => used.every(q => Math.hypot(q.x - p.x, q.z - p.z) > 0.65)) || f.spawn;
+    used.push(p);
+    const yaw = Math.atan2(p.x - launch.x, p.z - launch.z);
+    f.s = newPlayerState(p);
+    f.spawn = f.home = { x: p.x, z: p.z, yaw };
+    f.yaw = yaw;
+    giveKeepyBlock(f);
+  }
+  match.keepy = { homeX: launch.x, homeZ: launch.z, round: 0 };
+  resetKeepy(2);
+}
+function resetKeepy(delay) {
+  const b = match.keepy;
+  Object.assign(b, { x: b.homeX, y: 1.45, z: b.homeZ, vx: 0, vy: 0, vz: 0, last: null, ghostBlock: false, delay });
+  b.round++;
+}
+function bumpKeepy(f, vx, vz, lift, ghostBlock = false) {
+  const b = match.keepy;
+  Object.assign(b, { vx, vy: lift, vz, last: f.id, ghostBlock });
+  emit({ type: 'keepyHit', src: f.id, x: b.x, y: b.y, z: b.z });
+}
+function keepyGhostPickup(f) {
+  if (match.mode !== 'keepy' || match.over || f.alive || !f.ghostState) return false;
+  const s = f.ghostState;
+  if (f.held) return false;
+  let it = null, distance = 0.55;
+  for (const item of items) {
+    if (!MELEE[item.type]?.thr || item.holder || item.flying || item.placed || Math.abs(s.y - item.y) >= 0.65) continue;
+    const d = Math.hypot(s.x - item.x, s.z - item.z);
+    if (d < distance) { it = item; distance = d; }
+  }
+  if (!it) return false;
+  it.holder = f.id;
+  f.held = it;
+  emit({ type: 'pickup', f: f.id, item: it.type, name: f.name });
+  return true;
+}
+function giveKeepyBlock(f) {
+  const it = { id: 'i' + (++itemSeq), type: 'block', holder: f.id, x: f.s.x, y: f.s.y, z: f.s.z, color: 0x52a3ed, ammo: 0 };
+  items.push(it);
+  f.held = it;
+}
+function popKeepy() {
+  const b = match.keepy;
+  const last = fighterById(b.last);
+  const revive = last && !last.alive && !last.disconnected && b.ghostBlock;
+  const eligible = fighters.filter(f => f.alive && (revive || f !== last));
+  const count = Math.min(revive ? 2 : 1, eligible.length);
+  emit({ type: 'keepyPop', x: b.x, y: b.y, z: b.z, safe: !revive && last?.alive ? last.id : null, count });
+  for (let i = 0; i < count; i++) {
+    const victim = eligible.splice(Math.floor(Math.random() * eligible.length), 1)[0];
+    kill(victim, null, 'keepy', true);
+    victim.ghostState = newPlayerState(victim.s);
+    victim.ghostState.y = victim.s.y;
+    giveKeepyBlock(victim);
+  }
+  if (revive) {
+    if (last.held) dropHeld(last);
+    Object.assign(last, { s: newPlayerState(last.home), yaw: last.home.yaw, alive: true, hp: COMBAT.hp, cause: null,
+                          deadT: 0, cd: 0, ghostState: null, tp: (last.tp || 0) + 1 });
+    emit({ type: 'keepyReturn', target: last.id, name: last.name, count });
+  }
+  resetKeepy(1.75);
+  checkKeepyWinner();
+}
+function checkKeepyWinner() {
+  const alive = fighters.filter(f => f.alive);
+  if (alive.length <= 1) endMode(alive[0]?.id || null, alive.length ? 'Last baby standing: ' + alive[0].name + '!' : 'Every baby is out!');
+}
+function updateKeepy(dt) {
+  const b = match.keepy;
+  if (!b || match.over) return;
+  if (b.delay > 0) { b.delay = Math.max(0, b.delay - dt); return; }
+  const r = KEEPY_RADIUS, steps = Math.ceil(dt / 0.015);
+  for (let i = 0; i < steps; i++) {
+    const h = dt / steps;
+    b.vy = Math.max(-0.48, b.vy - 1.3 * h);
+    b.vx *= 1 - 0.55 * h;
+    b.vz *= 1 - 0.55 * h;
+    for (const [axis, velocity] of [['x', 'vx'], ['z', 'vz'], ['y', 'vy']]) {
+      const next = { x: b.x, y: b.y, z: b.z };
+      next[axis] += b[velocity] * h;
+      if (axis === 'y' && next.y <= r) { popKeepy(); return; }
+      const block = firstOverlap(boxAt(next.x, Math.max(0.001, next.y - r), next.z, 2 * r, r * 0.82));
+      if (block && axis === 'y' && b.vy < 0) {
+        b.vy = Math.max(0.55, -b.vy * 0.65);
+        if (Math.hypot(b.vx, b.vz) < 0.5) {
+          const dx = b.x - (block.minX + block.maxX) / 2, dz = b.z - (block.minZ + block.maxZ) / 2;
+          if (Math.abs(dx) >= Math.abs(dz)) b.vx = dx < 0 ? -1 : 1;
+          else b.vz = dz < 0 ? -1 : 1;
+        }
+      } else if (block || (axis !== 'y' && !roomAt(next.x, next.z))) b[velocity] *= -0.65;
+      else b[axis] = next[axis];
+    }
+  }
+}
+function updateKeepyBotGhost(f, dt) {
+  const s = f.ghostState, b = match.keepy, bot = f.bot;
+  if (!s || !b || match.over || f.disconnected) return;
+  if (!f.held) keepyGhostPickup(f);
+  const eye = eyeOf({ s }), dx = b.x - eye.x, dz = b.z - eye.z, dy = b.y - eye.y;
+  const d = Math.hypot(dx, dz), distance = Math.hypot(d, dy);
+  if (d > 2.2) stepPlayer(s, { dx: dx / d, dz: dz / d, jumpPressed: false }, dt);
+  f.yaw = Math.atan2(-dx, -dz);
+  if (f.held && !b.delay && d > 0.4 && d < 2.8 && b.vy < -0.1 && !f.cd &&
+      raycast(eye.x, eye.y, eye.z, dx / distance, dy / distance, dz / distance, distance) >= distance - KEEPY_RADIUS) {
+    bot.ghostAim = (bot.ghostAim || 0) + dt;
+    if (bot.ghostAim < 0.9) return;
+    // Lead the falling balloon, leaving some error so ghosts can miss.
+    const time = (d - 0.2) / COMBAT.blockThrow.speed;
+    f.pitch = Math.atan2(dy + b.vy * time - 1.2 * time + 4.9 * time * time, d - 0.2) + (Math.random() - 0.5) * 0.12;
+    act(f, 'secondary');
+    bot.ghostAim = 0;
+  } else bot.ghostAim = 0;
+}
+function actKeepy(f, kind) {
+  if (match.over || f.disconnected || f.cd > 0 || f.inCar) return null;
+  const state = f.alive ? f.s : f.ghostState;
+  if (!state || state.hang || state.climb) return null;
+  if (kind === 'secondary' && MELEE[f.held?.type]?.thr) return throwBlock(f, state);
+  if (!f.alive || kind !== 'primary') return null;
+  f.cd = 0.42; f.act = 'punch'; f.actT = 0;
+  const b = match.keepy, o = eyeOf(f), a = aimOf(f);
+  const dx = b.x - o.x, dy = b.y - o.y, dz = b.z - o.z, dist = Math.hypot(dx, dy, dz);
+  const hit = !b.delay && dist <= 0.91 && dx * a.x + dy * a.y + dz * a.z >= dist * 0.40 &&
+    raycast(o.x, o.y, o.z, dx / Math.max(dist, 0.001), dy / Math.max(dist, 0.001), dz / Math.max(dist, 0.001), dist) >= dist - KEEPY_RADIUS;
+  if (hit) bumpKeepy(f, a.x * 1.8, a.z * 1.8, 1.35 + Math.max(0, a.y) * 0.55);
+  emit({ type: 'swing', f: f.id, kind: 'punch', hit });
+  return { kind: 'punch', hit };
+}
+function balloonCenter(f) {
+  return { x: f.s.x, y: f.s.y + (f.s.crouched ? 0.55 : 0.77), z: f.s.z };
+}
+const TAG_ESCAPE_SECONDS = 3, TAG_ESCAPE_SPEED = 1.35;
 const TAGGY = c => c === 'punch' || c === 'kick' || /Hit$/.test(c || '');
 const fighterById = id => fighters.find(f => f.id === id);
 // what a hit is allowed to do in this mode: 'normal' (hurt), or 'none' (handled here: tag / freeze / slow the seeker)
 function ruleHit(t, src, cause) {
   const m = match.mode;
-  if (m === 'tag' || m === 'freeze' || m === 'zombie') { if (src && src !== t && TAGGY(cause) && !match.over) tagHit(src, t); return 'none'; }
+  if (m === 'balloon' || m === 'keepy') return cause === 'left' ? 'normal' : 'none';
+  if (m === 'tag' || m === 'freeze' || m === 'zombie') {
+    const thrown = (m === 'tag' || m === 'zombie') && /Throw$/.test(cause || '');
+    const trap = m === 'zombie' && (cause === 'spikes' || cause === 'trap');
+    const tags = TAGGY(cause) || thrown || trap;
+    if (src && src !== t && tags && !match.over) tagHit(src, t);
+    return 'none';
+  }
   if (m === 'hide') {
     if (match.over || match.phase !== 'seek') return 'none';
     const seeker = match.it;
@@ -2122,8 +2335,9 @@ function tagHit(src, t) {
   if (!t.alive || !src.alive) return;
   if (match.mode === 'tag') {
     if (src.id !== match.it || t.id === match.it) return;
-    if (match.noBack && match.noBack.id === t.id && match.noBack.t > 0) return;     // no tag-backs for a moment
-    match.it = t.id; match.noBack = { id: src.id, t: 3 };
+    if (t.tagEscape > 0) return;
+    match.it = t.id;
+    src.tagEscape = TAG_ESCAPE_SECONDS;
     t.stun = Math.max(t.stun, 0.8);                                                  // new IT counts to one
     emit({ type: 'tagged', target: t.id, src: src.id, name: t.name, by: src.name });
   } else if (match.mode === 'zombie') {
@@ -2154,21 +2368,23 @@ function lavaPerches() {
     if (top < 0.15 || top > 0.95 || w < 0.24 || d < 0.24 || w * d > 6) continue;
     const cx = (c.minX + c.maxX) / 2, cz = (c.minZ + c.maxZ) / 2;
     if (firstOverlap({ minX: cx - 0.12, maxX: cx + 0.12, minY: top + 0.02, maxY: top + 0.5, minZ: cz - 0.12, maxZ: cz + 0.12 })) continue;   // no headroom
-    out.push({ x: cx, z: cz, y: top, w, d, minX: c.minX, maxX: c.maxX, minZ: c.minZ, maxZ: c.maxZ });
+    out.push({ collider: c, x: cx, z: cz, y: top, w, d, minX: c.minX, maxX: c.maxX, minZ: c.minZ, maxZ: c.maxZ });
   }
   return out;
 }
 function thawOut(t, by) { t.frozen = false; t.thaw = 0; t.root = 0; emit({ type: 'thawed', target: t.id, src: by && by.id, name: t.name, by: by ? by.name : '' }); }
 function setupMode() {
   const M = MODES[match.mode] || {};
-  match.it = null; match.phase = null; match.left = M.limit || 0; match.noBack = null;
-  for (const f of fighters) { f.frozen = false; f.zombie = false; f.thaw = 0; f.itT = 0; f.hidStun = 0; }
+  match.it = null; match.phase = null; match.left = M.limit || 0;
+  for (const f of fighters) { f.frozen = false; f.zombie = false; f.thaw = 0; f.itT = 0; f.tagEscape = 0; f.hidStun = 0; }
   if (match.mode === 'tag' || match.mode === 'freeze') match.it = fighters[Math.floor(Math.random() * fighters.length)].id;
   if (match.mode === 'zombie') {                        // patient zero (two of them in big games)
     const pool = fighters.slice().sort(() => Math.random() - 0.5);
     for (const f of pool.slice(0, fighters.length >= 10 ? 2 : 1)) f.zombie = true;
     match.it = pool[0].id;
   }
+  match.keepy = null;
+  if (match.mode === 'keepy') setupKeepy();
   if (match.mode === 'lava') { match.phase = 'warn'; match.left = M.warn; match.lavaY = 0; match.perches = lavaPerches(); for (const f of fighters) f.lavaT = 0; }
   if (match.mode === 'hide') {
     match.it = fighters[Math.floor(Math.random() * fighters.length)].id;
@@ -2185,11 +2401,12 @@ function endMode(winnerId, text) {
 function updateModes(dt) {
   const m = match.mode, M = MODES[m];
   if (match.over || !M || !M.limit) return;
-  match.left = Math.max(0, match.left - dt);
+  const previousLeft = match.left;
+  match.left = Math.max(0, previousLeft - dt);
   const it = fighterById(match.it);
   if (m === 'tag') {
     if (it) it.itT += dt;
-    if (match.noBack) match.noBack.t -= dt;
+    for (const f of fighters) if (f.tagEscape > 0) f.tagEscape = Math.max(0, f.tagEscape - dt);
     if (match.left <= 0) {
       const best = fighters.filter(f => f.alive && f.id !== match.it).sort((a, b) => a.itT - b.itT)[0];   // whoever's IT at the buzzer can't win
       endMode(best && best.id, (it ? 'IT at the buzzer: ' + it.name + '. ' : '') + (best ? 'Least time as IT: ' + best.name + ' (' + best.itT.toFixed(1) + ' s).' : ''));
@@ -2205,13 +2422,27 @@ function updateModes(dt) {
     }
     if (runners.length && runners.every(f => f.frozen)) endMode(match.it, (it ? it.name : 'IT') + ' froze everybody!');
     else if (match.left <= 0) endMode(null, 'Time! The runners stayed free — ' + runners.filter(f => !f.frozen).length + ' still moving.');
+  } else if (m === 'keepy') {
+    checkKeepyWinner();
+    if (match.left <= 0) endMode(null, 'Time! The remaining babies survived.');
+  } else if (m === 'balloon') {
+    checkWinner();
+    if (match.left <= 0) endMode(null, 'Time! The remaining balloons survived.');
   } else if (m === 'lava') {
     if (match.phase === 'warn') {
-      if (match.left <= 0) { match.phase = 'lava'; match.left = M.limit; match.lavaY = 0.07; emit({ type: 'lavaOn' }); }
+      if (match.left <= 0) { match.phase = 'lava'; match.left = M.limit; match.lavaY = LAVA_WAVE.low; emit({ type: 'lavaOn' }); }
     } else {
-      // the lava creeps up every 40 s: low perches go under
-      const lv = Math.min(0.5, 0.07 + 0.12 * Math.floor((M.limit - match.left) / 40));
-      if (lv > match.lavaY) { match.lavaY = lv; emit({ type: 'lavaRise', y: lv }); }
+      const elapsed = M.limit - match.left;
+      const wave = Math.floor(elapsed / LAVA_WAVE_PERIOD);
+      const waveTime = elapsed % LAVA_WAVE_PERIOD;
+      const { low, firstPeak, peakStep, rise, fall } = LAVA_WAVE;
+      const peak = firstPeak + wave * peakStep;
+      const progress = waveTime < rise ? waveTime / rise : Math.max(0, 1 - (waveTime - rise) / fall);
+      const eased = progress * progress * (3 - 2 * progress);
+      match.lavaY = low + (peak - low) * eased;
+      if (match.left > 0 && wave > Math.floor((M.limit - previousLeft) / LAVA_WAVE_PERIOD)) {
+        emit({ type: 'lavaRise', y: match.lavaY });
+      }
       for (const f of fighters) {
         if (!f.alive) continue;
         const onFloor = f.s.y < match.lavaY && (f.s.grounded || f.s.y < match.lavaY - 0.1) && !f.inCar;
@@ -2242,12 +2473,13 @@ function updateModes(dt) {
   }
 }
 function checkWinner() {
-  if (match.mode !== 'battle' || match.over) return;
+  if (match.over || (match.mode !== 'battle' && match.mode !== 'balloon')) return;
   const alive = fighters.filter(f => f.alive);
   // over when one baby is left (knocked-out players keep watching: their killer, then whoever gets them, and so on)
   if (alive.length <= 1) {
     match.over = true; match.winner = alive.length === 1 ? alive[0].id : null;
-    emit({ type: 'over', winner: match.winner, name: alive.length === 1 ? alive[0].name : '' });
+    emit({ type: 'over', winner: match.winner, name: alive.length === 1 ? alive[0].name : '',
+           text: match.mode === 'balloon' ? (alive.length ? 'Last balloon standing: ' + alive[0].name + '!' : 'All balloons are gone!') : undefined });
   }
 }
 
@@ -2285,6 +2517,7 @@ function meleeTarget(f, reach) {
   return best;
 }
 function act(f, kind) {           // kind: 'primary' (punch / swing / shoot) or 'secondary' (kick / throw)
+  if (match.mode === 'keepy') return actKeepy(f, kind);
   if (!f.alive || f.down > 0 || f.cd > 0 || f.s.hang || f.s.climb || f.inCar) return null;
   if (f.grab) releaseFurniture(f);                     // let go of the furniture to fight
   const h = f.held && f.held.type;
@@ -2377,13 +2610,13 @@ function swingItem(f, h) {
   if (t.alive && m.knock) knockDown(t, f);
   return { kind: cause, hit: true, target: t.id };
 }
-function throwBlock(f) {
+function throwBlock(f, state = f.s) {
   const it = f.held, m = MELEE[it.type] || MELEE.block;
   f.held = null; it.holder = null; it.flying = true;
   f.cd = COMBAT.blockThrow.cd; f.act = 'throw'; f.actT = 0;
-  const o = eyeOf(f), a = aimOf(f), v = COMBAT.blockThrow.speed;
+  const o = eyeOf({ s: state }), a = aimOf(f), v = COMBAT.blockThrow.speed;
   projectiles.push({ item: it, owner: f, x: o.x + a.x * 0.2, y: o.y, z: o.z + a.z * 0.2, vx: a.x * v, vy: a.y * v + 1.2, vz: a.z * v, age: 0,
-                    dmg: m.thr, cause: it.type === 'block' ? 'blockThrow' : it.type + 'Throw' });
+                    fromGhost: !f.alive, dmg: m.thr, cause: it.type === 'block' ? 'blockThrow' : it.type + 'Throw' });
   emit({ type: 'throw', f: f.id });
   return { kind: 'throw' };
 }
@@ -2426,6 +2659,13 @@ function segDist(px, pz, ax, az, bx, bz) {
 }
 
 // ---- per-frame update of everything that isn't movement
+function syncFighterMovement(f) {
+  const zombie = match.mode === 'zombie' && f.zombie;
+  const tagSpeed = match.mode === 'tag' ? (f.tagEscape > 0 ? TAG_ESCAPE_SPEED : f.id === match.it ? 1.1 : 1) : 1;
+  const moveSpeed = zombie ? 1.15 : f.sugar > 0 ? COMBAT.sugarSpeed : 1;
+  f.s.walkOnly = !!zombie;
+  f.s.speedMul = moveSpeed * tagSpeed * (f.grab ? 0.55 : 1);
+}
 function updateCombat(dt) {
   match.time += dt;
   updateModes(dt);
@@ -2456,7 +2696,7 @@ function updateCombat(dt) {
     if (f.sugar > 0) f.sugar = Math.max(0, f.sugar - dt);
     if (f.strong > 0) f.strong = Math.max(0, f.strong - dt);
     if (f.root > 0) f.root = Math.max(0, f.root - dt);
-    f.s.speedMul = (f.sugar > 0 ? COMBAT.sugarSpeed : 1) * (f.id === match.it ? (match.mode === 'freeze' ? 1 : match.mode === 'tag' ? 1.1 : 1) : 1 * (f.zombie ? 0.84 : 1)) * (f.grab ? 0.55 : 1);
+    syncFighterMovement(f);
     if (f.stun > 0) f.stun = Math.max(0, f.stun - dt);
     if (f.down > 0) f.down = Math.max(0, f.down - dt);
     if (!f.alive) {
@@ -2489,6 +2729,31 @@ function updateCombat(dt) {
     for (let k = 0; k < steps && !done; k++) {
       const h = dt / steps;
       p.vy -= 9.8 * h; p.x += p.vx * h; p.y += p.vy * h; p.z += p.vz * h;
+      if ((match.mode === 'tag' || match.mode === 'zombie') && firstOverlap(boxAt(p.x, p.y - 0.05, p.z, 0.1, 0.05))) { done = true; continue; }
+      if (match.mode === 'balloon') {
+        const blocked = firstOverlap(boxAt(p.x, p.y - 0.05, p.z, 0.1, 0.05));
+        if (blocked || p.y < -0.5 || p.age > 4) { done = true; continue; }
+        if (!match.over) for (const t of fighters) {
+          if (!t.alive || t === p.owner) continue;
+          const b = balloonCenter(t);
+          if (Math.hypot(p.x - b.x, p.y - b.y, p.z - b.z) > BALLOON_RADIUS + 0.05) continue;
+          emit({ type: 'balloonPop', target: t.id, src: p.owner.id, ...b });
+          kill(t, p.owner, 'balloon', true);
+          done = true;
+          break;
+        }
+        if (done) continue;
+      }
+      if (match.mode === 'keepy') {
+        const b = match.keepy;
+        if (firstOverlap(boxAt(p.x, p.y - 0.05, p.z, 0.1, 0.05)) || p.y < -0.5 || p.age > 4) { done = true; continue; }
+        if (!match.over && !b.delay && Math.hypot(p.x - b.x, p.y - b.y, p.z - b.z) <= KEEPY_RADIUS + 0.06) {
+          bumpKeepy(p.owner, p.vx * 0.36, p.vz * 0.36, Math.max(0.8, Math.min(2.05, 1.25 + p.vy * 0.2)),
+                    p.fromGhost && p.item.type === 'block');
+          done = true;
+        }
+        continue;
+      }
       for (const t of fighters) {
         if (!t.alive || (t === p.owner && p.age < 0.3)) continue;
         const b = bodyBox(t);
@@ -2507,6 +2772,7 @@ function updateCombat(dt) {
       emit({ type: 'land', item: it.id });
     } else { p.item.x = p.x; p.item.y = p.y; p.item.z = p.z; }
   }
+  if (match.mode === 'keepy') updateKeepy(dt);
   // live extension cords
   for (const tr of traps) {
     if (!tr.live || !items.includes(tr.item)) { if (tr.live) unplug(tr, 'gone'); continue; }
@@ -2593,6 +2859,7 @@ function randomNavPoint() {
 }
 // Returns the movement input for a bot this frame and performs its actions.
 function botThink(f, dt) {
+  syncFighterMovement(f);
   const inp = botThinkRaw(f, dt);
   if (f.root > 0) { inp.dx = inp.dz = 0; inp.jumpPressed = false; }
   if (f.stun > 0) { inp.dx *= COMBAT.combo.slow; inp.dz *= COMBAT.combo.slow; inp.sprint = false; inp.jumpPressed = false; }
@@ -2641,6 +2908,54 @@ function botThinkRaw(f, dt) {
     b.stuck = (Math.hypot(f.s.vx, f.s.vz) < 0.05 && d > 0.2) ? (b.stuck || 0) + dt : 0;
     if (b.stuck > 0.8) { inp.jumpPressed = true; b.stuck = 0; b.repath = 0; }
   };
+  if (match.mode === 'keepy' && !match.over) {
+    const balloon = match.keepy, eye = eyeOf(f);
+    const dx = balloon.x - eye.x, dy = balloon.y - eye.y, dz = balloon.z - eye.z;
+    const d = Math.hypot(dx, dz);
+    if (d > 0.48) goTo(balloon.x, balloon.z, d > 1.65);
+    f.yaw = Math.atan2(-dx, -dz);
+    f.pitch = Math.atan2(dy, d);
+    if (dy > 0.5 && d < 0.65 && dy < 0.95 && f.s.grounded) inp.jumpPressed = true;
+    if (!balloon.delay && !f.cd && Math.hypot(d, dy) < 0.83) {
+      b.keepyAim = (b.keepyAim || 0) + dt;
+      if (b.keepyAim > 0.20 + Math.random() * 0.20) {
+        act(f, 'primary');
+        b.keepyAim = 0;
+      }
+    } else b.keepyAim = 0;
+    return inp;
+  }
+  if (match.mode === 'balloon' && !match.over) {
+    if (!f.held) {
+      let closest = null, distance = Infinity;
+      for (const item of items) {
+        if (!MELEE[item.type]?.thr || item.holder || item.flying || item.y > f.s.y + 0.7) continue;
+        const d = Math.hypot(item.x - f.s.x, item.z - f.s.z);
+        if (d < distance) { closest = item; distance = d; }
+      }
+      if (closest && distance < 0.5) pickUp(f, closest);
+      else if (closest) goTo(closest.x, closest.z, true);
+      return inp;
+    }
+    const goal = tgt || fighters.find(t => t !== f && t.alive);
+    if (!goal) return inp;
+    const o = eyeOf(f), target = balloonCenter(goal);
+    const dx = target.x - o.x, dz = target.z - o.z, dy = target.y - o.y;
+    const distance = Math.hypot(dx, dz);
+    if (distance > 3.5 || !canSee(f, goal)) goTo(target.x, target.z, true);
+    else if (distance > 0.3) {
+      f.yaw = Math.atan2(-dx, -dz);
+      let pitch = 0;
+      for (let i = 0; i < 3; i++) {
+        const travel = (distance / Math.cos(pitch) - 0.2) / COMBAT.blockThrow.speed;
+        pitch = Math.atan2(dy - 1.2 * travel + 4.9 * travel * travel, COMBAT.blockThrow.speed * travel);
+      }
+      f.pitch = pitch;
+      b.aim = (b.aim || 0) + dt;
+      if (b.aim > 0.65 && f.cd <= 0) { act(f, 'secondary'); b.aim = 0; }
+    }
+    return inp;
+  }
   if ((match.mode === 'tag' || match.mode === 'freeze' || match.mode === 'zombie' || match.mode === 'hide' || match.mode === 'lava') && !match.over) { modeBot(f, b, dt, inp, goTo); return inp; }
   if (tgt) {
     const dx = tgt.s.x - f.s.x, dz = tgt.s.z - f.s.z, d = Math.hypot(dx, dz);
@@ -2707,6 +3022,25 @@ function chaseBonk(f, t, goTo, lunge) {
     f.yaw = Math.atan2(-dx, -dz); const e = eyeOf(f), te = eyeOf(t); f.pitch = Math.atan2(te.y - 0.12 - e.y, Math.max(0.05, d));
     if (f.cd <= 0) act(f, 'primary');
   } else goTo(t.s.x, t.s.z, lunge ? d < lunge : d > 0.8);
+}
+function tryTagToy(f, target, traps) {
+  if (f.cd > 0) return false;
+  if (!f.held) {
+    const toy = items.find(i => (MELEE[i.type]?.thr || (traps && i.type === 'spikes')) && !i.holder && !i.flying && !i.placed &&
+      Math.hypot(f.s.x - i.x, f.s.z - i.z) < 0.5 && Math.abs(f.s.y - i.y) < 0.4);
+    if (toy) pickUp(f, toy);
+  }
+  const d = fdist(f, target);
+  if (traps && f.held?.type === 'spikes' && d < 1.7) {
+    f.yaw = Math.atan2(f.s.x - target.s.x, f.s.z - target.s.z);
+    return !!act(f, 'primary');
+  }
+  if (!MELEE[f.held?.type]?.thr || d <= 0.9 || d >= 3.5 || !canSee(f, target)) return false;
+  const from = eyeOf(f), to = eyeOf(target);
+  const time = (d - 0.2) / COMBAT.blockThrow.speed;
+  f.yaw = Math.atan2(from.x - to.x, from.z - to.z);
+  f.pitch = Math.atan2(to.y - 0.12 - from.y - 1.2 * time + 4.9 * time * time, d - 0.2);
+  return !!act(f, 'secondary');
 }
 function hideSpots() {
   const out = [];
@@ -2778,7 +3112,8 @@ function modeBot(f, b, dt, inp, goTo) {
     if (f.zombie) {                                       // shamble after the nearest baby
       let tgt = null, td = Infinity;
       for (const t of fighters) { if (t.zombie || !t.alive) continue; const d = fdist(f, t) * (canSee(f, t) ? 0.6 : 1); if (d < td) { td = d; tgt = t; } }
-      if (tgt) chaseBonk(f, tgt, goTo, 2.2); else wander();      // zombies shamble, and only lunge up close
+      if (tgt && tryTagToy(f, tgt, true)) return;
+      if (tgt) chaseBonk(f, tgt, goTo); else wander();
       return;
     }
     let near = null, nd = 7;
@@ -2791,10 +3126,11 @@ function modeBot(f, b, dt, inp, goTo) {
     if (amIt) {
       let tgt = null, td = Infinity;
       for (const t of fighters) {
-        if (t === f || !t.alive || (m === 'freeze' && t.frozen) || (match.noBack && match.noBack.id === t.id && match.noBack.t > 0)) continue;
+        if (t === f || !t.alive || (m === 'freeze' && t.frozen) || (m === 'tag' && t.tagEscape > 0)) continue;
         const d = fdist(f, t) * (canSee(f, t) ? 0.6 : 1);
         if (d < td) { td = d; tgt = t; }
       }
+      if (m === 'tag' && tgt && tryTagToy(f, tgt, false)) return;
       if (tgt) chaseBonk(f, tgt, goTo); else wander();
       return;
     }
@@ -2897,7 +3233,7 @@ function seatDriver() {
   f.s.grounded = true; f.s.crouched = false; f.s.height = PLAYER.height; f.s.hang = null; f.s.climb = null;
 }
 function canEnterCar(f) {
-  return !!(car.p && !car.driver && f.alive && f.down <= 0 && !f.s.hang && !f.s.climb && f.s.y < 0.6 && inCarBox(f.s.x, f.s.z, CAR.reach));
+  return !!(match.mode !== 'balloon' && match.mode !== 'keepy' && car.p && !car.driver && f.alive && f.down <= 0 && !f.s.hang && !f.s.climb && f.s.y < 0.6 && inCarBox(f.s.x, f.s.z, CAR.reach));
 }
 function enterCar(f) {
   if (!canEnterCar(f)) return false;
@@ -3004,6 +3340,14 @@ function setupMatch(opts) {
     }
     newFighter(match.mode === 'practice' ? 'Dummy ' + (i + 1) : BOT_NAMES[i % BOT_NAMES.length], pos, match.mode === 'practice' ? { dummy: true } : { bot: {} });
   }
+  if (match.mode === 'balloon') {
+    let extraBlocks = 0;
+    for (const room of ROOMS) {
+      if (room.id === 'outdoor') continue;
+      for (let i = 0; i < 2; i++) if (spawnExtra('block', room.id)) extraBlocks++;
+    }
+    for (let i = extraBlocks; i < fighters.length * 2; i++) spawnExtra('block');
+  }
   setupMode();
   return player;
 }
@@ -3020,7 +3364,7 @@ global.CORE = {
   floodReachable, selfTest,
   exportMap, loadMap, loadDefaultHouse, mapState, MAP_FORMAT, FURNITURE, naturalScale, COLLIDER_TEMPLATES, PIECE,
   COMBAT, ITEM_NAMES, PICKUPS, OUTLETS, fighters, items, projectiles, traps, match, drainEvents, newFighter, eyeOf, aimOf,
-  MODES, ruleHit, act, pickUp, dropHeld, itemNear, outletNear, plugWire, updateCombat, botThink, buildNav, findPath, setupMatch, damage, kill, stun, knockDown, canSee, MELEE, POWERUPS, SPAWN_EXTRAS, spawnExtra, onRug, frontOf, CORD, cordEnd,
+  MODES, syncFighterMovement, BALLOON_RADIUS, KEEPY_RADIUS, keepyGhostPickup, updateKeepyBotGhost, balloonCenter, ruleHit, act, pickUp, dropHeld, itemNear, outletNear, plugWire, updateCombat, botThink, buildNav, findPath, setupMatch, damage, kill, stun, knockDown, canSee, MELEE, POWERUPS, SPAWN_EXTRAS, spawnExtra, onRug, frontOf, CORD, cordEnd,
   CAR, car, setupCar, canEnterCar, enterCar, exitCar, toggleEngine, updateCar, inCarBox, syncCarCollider
 };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -3038,6 +3382,7 @@ global.CORE = {
 <!-- ======================================================================
      GAME — rendering, input, audio, UI (Three.js)
      ====================================================================== -->
+<script src="assets/textures/lava.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -3459,15 +3804,67 @@ function splitCabinetFront(g, dims) {
   }
   return front;
 }
+function makeGuitar(golden) {
+  const guitar = new THREE.Group();
+  const wood = golden ? 0xe5a350 : 0xdeaa71;
+  const edge = golden ? 0x5e2823 : 0x754533;
+  const ebony = 0x352622, ivory = 0xf2daaa, metal = 0xd5d4c7;
+  const materials = new Map();
+  const add = (geometry, color, x = 0, y = 0, z = 0) => {
+    if (!materials.has(color)) materials.set(color, new THREE.MeshToonMaterial({ color, gradientMap: GRADIENT }));
+    const mesh = new THREE.Mesh(geometry, materials.get(color));
+    mesh.position.set(x, y, z);
+    guitar.add(mesh);
+    return mesh;
+  };
+  const body = new THREE.Shape();
+  body.moveTo(0, 0);
+  body.bezierCurveTo(0.17, 0, 0.205, 0.06, 0.195, 0.14);
+  body.bezierCurveTo(0.19, 0.21, 0.105, 0.23, 0.131, 0.3);
+  body.bezierCurveTo(0.17, 0.38, 0.13, 0.45, 0, 0.45);
+  body.bezierCurveTo(-0.13, 0.45, -0.17, 0.38, -0.131, 0.3);
+  body.bezierCurveTo(-0.105, 0.23, -0.19, 0.21, -0.195, 0.14);
+  body.bezierCurveTo(-0.205, 0.06, -0.17, 0, 0, 0);
+  const shell = new THREE.ExtrudeGeometry(body, { depth: 0.085, bevelEnabled: false, curveSegments: 10 });
+  guitar.add(new THREE.Mesh(shell, [
+    new THREE.MeshToonMaterial({ color: wood, gradientMap: GRADIENT }),
+    new THREE.MeshToonMaterial({ color: edge, gradientMap: GRADIENT })
+  ]));
+  add(new THREE.CircleGeometry(0.052, 24), ebony, 0, 0.314, 0.086);
+  add(new THREE.RingGeometry(0.053, 0.058, 24), ivory, 0, 0.314, 0.087);
+  add(new THREE.BoxGeometry(0.142, 0.026, 0.016), ebony, 0, 0.165, 0.087);
+  add(new THREE.BoxGeometry(0.061, 0.457, 0.04), edge, 0, 0.624, 0.055);
+  add(new THREE.BoxGeometry(0.052, 0.451, 0.018), ebony, 0, 0.624, 0.084);
+  add(new THREE.BoxGeometry(0.082, 0.147, 0.034), edge, 0, 0.9265, 0.068);
+  const details = [];
+  for (let i = 0; i < 6; i++) {
+    const x = (i - 2.5) * 0.006;
+    details.push(x, 0.169, 0.103, x, 0.919 + (i % 3) * 0.02, 0.103);
+    add(new THREE.BoxGeometry(0.028, 0.013, 0.018), metal, (i < 3 ? -1 : 1) * 0.046, 0.884 + (i % 3) * 0.036, 0.07);
+  }
+  for (let i = 0, y = 0.836; i < 13; i++) {
+    details.push(-0.025, y, 0.095, 0.025, y, 0.095);
+    y -= 0.043 * 0.945 ** i;
+  }
+  const lines = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(details, 3));
+  guitar.add(new THREE.LineSegments(lines, new THREE.LineBasicMaterial({ color: metal })));
+  guitar.position.z = -0.043;
+  const root = new THREE.Group();
+  root.add(guitar);
+  return root;
+}
 async function loadPlacement(p, gen) {
   try {
-    const sc = (await Assets.get(p.model)).scene;
+    const guitar = p.model === 'guitar_acoustic' || p.model === 'guitar_golden';
+    const sc = guitar ? null : (await Assets.get(p.model)).scene;
     if (gen !== World.gen) return;                       // a different map was loaded meanwhile
-    const g = centred(sc, C.MODEL_DIMS[p.model]);
-    g.position.set(p.x, p.y, p.z); g.rotation.y = p.rot; g.scale.setScalar(p.scale);
+    const d = C.MODEL_DIMS[p.model];
+    const g = guitar ? makeGuitar(p.model === 'guitar_golden') : centred(sc, d);
+    g.position.set(p.x, p.y, p.z); g.rotation.y = p.rot;
+    g.scale.setScalar(p.scale * (guitar ? d.max[1] - d.min[1] : 1));
     toonify(g, p.room);
-    const front = p.collide === 'cabinet' ? splitCabinetFront(g, C.MODEL_DIMS[p.model]) : null;
-    if (p.outline && p.collide !== 'cabinet') addOutlines(g, p.room === 'outdoor' ? 0.03 : 0.007);   // hollow wardrobes/fridges: no outline shell to poke through
+    const front = p.collide === 'cabinet' ? splitCabinetFront(g, d) : null;
+    if (!guitar && p.outline && p.collide !== 'cabinet') addOutlines(g, p.room === 'outdoor' ? 0.03 : 0.007);   // hollow wardrobes/fridges: no outline shell to poke through
     g.traverse(o => { o.matrixAutoUpdate = false; o.updateMatrix(); });
     g.updateMatrixWorld(true);
     World.root.add(g);
@@ -3496,10 +3893,17 @@ function buildDoorViews() { doorViews = C.doors.map(d => {
   const pivot = new THREE.Group();
   pivot.position.set(d.hx, 0, d.hz);
   const prim = new THREE.Group(); pivot.add(prim);           // primitive stand-in until the model loads
-  const panel = new THREE.Mesh(new THREE.BoxGeometry(d.w - 0.01, d.h - 0.01, d.panelThick), Mat.get(d.room, 0x9a5a32, 'solid', 'grain'));
+  const cupboard = d.id === 'kitchenCupboard';
+  const finish = cupboard ? Mat.get(d.room, C.COL.white) : Mat.get(d.room, 0x9a5a32, 'solid', 'grain');
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(d.w - 0.01, d.h - 0.01, d.panelThick), finish);
   panel.position.set(d.w / 2, d.h / 2, 0);
   prim.add(panel);
-  const knobMat = Mat.get(d.room, 0xd4af37);
+  if (cupboard) for (const side of [-1, 1]) {
+    const insert = new THREE.Mesh(new THREE.BoxGeometry(d.w - 0.09, d.h - 0.10, 0.008), Mat.get(d.room, 0xf4f1e9));
+    insert.position.set(d.w / 2, d.h / 2, side * (d.panelThick / 2 + 0.003));
+    prim.add(insert);
+  }
+  const knobMat = Mat.get(d.room, cupboard ? C.COL.metal : 0xd4af37);
   for (const side of [-1, 1]) {
     const k = new THREE.Mesh(knobGeo, knobMat);
     k.position.set(d.w - 0.08, Math.min(0.95, d.h * 0.48), side * (d.panelThick / 2 + 0.03));
@@ -3511,7 +3915,7 @@ function buildDoorViews() { doorViews = C.doors.map(d => {
 function loadDoorModels() {
   const gen = World.gen;
   for (const v of doorViews) {
-    if (v.model.startsWith('front:')) continue;          // a wardrobe front: cut out of its model by loadPlacement()
+    if (v.d.id === 'kitchenCupboard' || v.model.startsWith('front:')) continue;          // a wardrobe front: cut out of its model by loadPlacement()
     Assets.get(v.model).then(({ scene: sc }) => {
       if (gen !== World.gen) return;
       const dims = C.MODEL_DIMS[v.model], d = v.d;
@@ -3525,9 +3929,15 @@ function loadDoorModels() {
 }
 function syncMovedFurniture() {            // dragged furniture: move its model (and its placeholder) along
   for (const p of C.PLACEMENTS) {
-    if (!p.moved || !p.obj || (p.objX === p.x && p.objZ === p.z)) continue;
-    p.obj.position.x += p.x - p.objX; p.obj.position.z += p.z - p.objZ; p.objX = p.x; p.objZ = p.z;
-    p.obj.updateMatrix(); p.obj.updateMatrixWorld(true);
+    if (!p.moved || (p.objX === p.x && p.objZ === p.z)) continue;
+    if (p.obj) {
+      p.obj.position.set(p.x, p.y, p.z);
+      p.obj.updateMatrix();
+    } else for (const mesh of groupMeshes[p.group] || []) {
+      mesh.position.set(p.x - p.homeX, 0, p.z - p.homeZ);
+      mesh.updateMatrix();
+    }
+    p.objX = p.x; p.objZ = p.z;
   }
 }
 function syncDoorViews() {
@@ -3614,12 +4024,14 @@ const BabyGLTF = {};
 const babyViews = [];
 const blobGeo = new THREE.CircleGeometry(0.17, 20);
 const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
-function makeBabyView(outlines) {
+function makeBabyView(outlines, menuOnly = false) {
   const v = { root: new THREE.Group(), pitch: new THREE.Group(), body: new THREE.Group(), mats: [], skins: {}, active: null, wanted: null,
               phase: 0, crouch: 0, air: 0, airT: 0, emote: false, ledgeK: 0, outlines: outlines !== false, flash: 0, jab: 0, prevActT: 9, onStep: null, tag: null };
   v.root.add(v.pitch); v.pitch.add(v.body);
-  v.prim = makePrimBaby(v.mats);
-  v.body.add(v.prim.root);
+  if (!menuOnly) {
+    v.prim = makePrimBaby(v.mats);
+    v.body.add(v.prim.root);
+  }
   v.blob = new THREE.Mesh(blobGeo, blobMat); v.blob.rotation.x = -Math.PI / 2; v.blob.renderOrder = 1; v.blob.visible = false;
   scene.add(v.root); scene.add(v.blob);
   v.root.visible = false;
@@ -3646,6 +4058,8 @@ function attachSkin(v, name) {
     o.material = m; o.frustumCulled = false;               // animation moves vertices outside the bind-pose bounds
   });
   if (v.outlines) addOutlines(g, 0.0045);
+  v.ghostA = null;
+  v.outlineList = null;
   g.visible = false;
   v.body.add(g);
   const mixer = new THREE.AnimationMixer(model);
@@ -3662,15 +4076,21 @@ function setBabySkin(v, name) {
   v.wanted = name;
   const sk = attachSkin(v, name);
   for (const k in v.skins) v.skins[k].group.visible = false;
-  if (sk) { sk.group.visible = true; v.prim.root.visible = false; v.active = sk; sk.mixer.stopAllAction(); sk.current = null; play(sk, 'idle', 0); }
-  else { v.prim.root.visible = true; v.active = null; }
+  if (v.prim) v.prim.root.visible = !sk;
+  v.active = sk;
+  if (sk) {
+    sk.group.visible = true;
+    sk.mixer.stopAllAction(); sk.current = null;
+    play(sk, 'idle', 0);
+  }
 }
 function loadBabySkins() {
   for (const name of Object.keys(BABY_SKINS)) {
     Assets.get(name).then(gltf => {
       BabyGLTF[name] = gltf;
-      for (const v of babyViews) if (v.wanted === name || (!v.wanted && !v.active)) setBabySkin(v, name);
-    }).catch(() => {});
+      for (const v of babyViews) if (v.wanted === name) setBabySkin(v, name);
+      SkinPicker.refresh();
+    }).catch(() => { SkinPicker.failed.add(name); SkinPicker.refresh(); });
   }
 }
 const randomSkin = () => { const n = Object.keys(BABY_SKINS); return n[Math.floor(Math.random() * n.length)]; };
@@ -3686,7 +4106,19 @@ function play(sk, name, fade) {
   sk.current = name;
   return next;
 }
-const baby = makeBabyView();          // you (also the dancing baby on the main menu)
+const baby = makeBabyView();          // you
+const menuBabies = [makeBabyView(undefined, true), makeBabyView(undefined, true)];
+let menuSkins = [];
+function chooseMenuBabies() {
+  const names = Object.keys(BABY_SKINS);
+  const pairs = names.flatMap(a => names.filter(b => a !== b).map(b => [a, b]));
+  const options = pairs.filter(([a, b]) => a !== menuSkins[0] || b !== menuSkins[1]);
+  menuSkins = options[Math.floor(Math.random() * options.length)];
+  menuBabies.forEach((v, i) => { setBabySkin(v, menuSkins[i]); v.emote = 'dance'; });
+}
+function hideMenuBabies() {
+  for (const v of menuBabies) v.root.visible = v.blob.visible = false;
+}
 const botViews = [];
 function botView(i) { while (botViews.length <= i) botViews.push(makeBabyView(Settings.data.outlines && !touchMode)); return botViews[i]; }
 
@@ -3840,6 +4272,7 @@ function animateBaby(v, dt, grounded, crouched, moveSpeed, st, f) {
     else if (v.emote) want = v.emote === 'dance' && sk.actions.dance ? 'dance' : 'tantrum';
     else if (v.airT > 0.02) { want = 'jump'; rate = 1.5; fade = 0.06; }
     else if (crouched) { want = 'crawl'; rate = moveSpeed / CLIP_SPEED.crawl; }
+    else if (f?.zombie && moveSpeed > 0.08) { want = 'walk'; rate = moveSpeed / CLIP_SPEED.walk; }
     else if (moveSpeed > 1.3) { want = 'sprint'; rate = moveSpeed / CLIP_SPEED.sprint; }
     else if (moveSpeed > 0.8) { want = 'run'; rate = moveSpeed / CLIP_SPEED.run; }
     else if (moveSpeed > 0.08) { want = 'walk'; rate = moveSpeed / CLIP_SPEED.walk; }
@@ -3874,10 +4307,19 @@ function babyTantrum(kind) {
   if (a && baby.active.current === kind) a.reset().play();
 }
 baby.onStep = soft => { if (Game.state === 'playing') Sfx.step(soft); };
-const ICE = new THREE.Color(0x9fd8ff), ZOMBIE = new THREE.Color(0x7fb05a);
+const ICE = new THREE.Color(0x9fd8ff), ZOMBIE = new THREE.Color(0xa4ff00);
 function tintBaby(v, level, frozen, zombie) {
   v.flash = Math.max(0, v.flash - 0.016);
-  for (const m of v.mats) { m.color.copy(m.userData.base); if (frozen) m.color.lerp(ICE, 0.6); if (zombie) m.color.lerp(ZOMBIE, 0.55); m.color.multiplyScalar(level); if (m.emissive) m.emissive.setRGB(v.flash * 4, v.flash * 0.6, v.flash * 0.6); }
+  for (const m of v.mats) {
+    m.color.copy(zombie ? ZOMBIE : m.userData.base);
+    if (frozen && !zombie) m.color.lerp(ICE, 0.6);
+    m.color.multiplyScalar(zombie ? Math.max(0.85, level) : level);
+    if (m.emissive) {
+      // Keep the lime tint visible even on dark textures and in unlit rooms.
+      const glow = zombie ? 0.24 : 0;
+      m.emissive.setRGB(ZOMBIE.r * glow + v.flash * 4, ZOMBIE.g * glow + v.flash * 0.6, v.flash * 0.6);
+    }
+  }
 }
 // floating name + health tag over other babies
 function makeTag() {
@@ -3901,35 +4343,31 @@ function drawTag(t, name, hp, stun) {
 
 // the floor is lava: a glowing, bubbling sheet over the whole house floor (rises with match.lavaY)
 const Lava = {
-  mesh: null, tex: null, ctx: null, t: 0,
+  mesh: null, tex: null, t: 0,
   build() {
-    const cv = document.createElement('canvas'); cv.width = cv.height = 128; this.ctx = cv.getContext('2d');
-    this.tex = new THREE.CanvasTexture(cv); this.tex.wrapS = this.tex.wrapT = THREE.RepeatWrapping; this.tex.colorSpace = THREE.SRGBColorSpace;
+    if (!this.tex && window.BBC_LAVA_TEXTURE) {
+      this.tex = new THREE.TextureLoader().load(window.BBC_LAVA_TEXTURE);
+      this.tex.wrapS = this.tex.wrapT = THREE.MirroredRepeatWrapping;
+      this.tex.colorSpace = THREE.SRGBColorSpace;
+    }
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
     for (const r of C.ROOMS) for (const b of r.boxes || [r]) { x0 = Math.min(x0, b.x0 ?? b.minX); x1 = Math.max(x1, b.x1 ?? b.maxX); z0 = Math.min(z0, b.z0 ?? b.minZ); z1 = Math.max(z1, b.z1 ?? b.maxZ); }
     if (!isFinite(x0)) { x0 = -12; x1 = 26; z0 = -10; z1 = 24; }
     const w = x1 - x0 + 2, d = z1 - z0 + 2;
-    this.tex.repeat.set(w / 1.5, d / 1.5);
-    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+    if (this.tex) this.tex.repeat.set(w / 2.4, d / 2.4);
+    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({
+      color: this.tex ? 0xffffff : 0xe74412, map: this.tex, transparent: true, opacity: 0,
+      depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1
+    }));
     this.mesh.rotation.x = -Math.PI / 2; this.mesh.position.set((x0 + x1) / 2, 0.03, (z0 + z1) / 2); this.mesh.renderOrder = 2;
     scene.add(this.mesh);
-  },
-  paint() {
-    const g = this.ctx, t = this.t;
-    g.fillStyle = '#d93a0b'; g.fillRect(0, 0, 128, 128);
-    for (let i = 0; i < 26; i++) {                      // drifting blobs of hotter / cooler lava
-      const x = (i * 37 + Math.sin(t * 0.6 + i) * 18) % 128, y = (i * 53 + t * 9 + Math.cos(t * 0.5 + i * 1.7) * 14) % 128, r = 8 + (i % 5) * 4;
-      const gr = g.createRadialGradient(x, y, 0, x, y, r); const hot = i % 3 !== 0;
-      gr.addColorStop(0, hot ? 'rgba(255,214,80,0.95)' : 'rgba(120,20,8,0.8)'); gr.addColorStop(1, 'rgba(255,90,20,0)');
-      g.fillStyle = gr; for (const ox of [-128, 0]) for (const oy of [-128, 0]) { g.beginPath(); g.arc(x - ox, y - oy, r, 0, 7); g.fill(); }
-    }
-    this.tex.needsUpdate = true;
   },
   update(dt) {
     const on = Game.state !== 'menu' && C.match.mode === 'lava' && C.MODES.lava && !C.match.over;
     if (!on) { if (this.mesh) this.mesh.visible = false; return; }
     if (!this.mesh) this.build();
-    this.t += dt; if ((this.frame = (this.frame || 0) + 1) % 3 === 0) this.paint();
+    this.t += dt;
+    if (this.tex) this.tex.offset.set(Math.sin(this.t * 0.22) * 0.035, Math.cos(this.t * 0.17) * 0.035);
     const warn = C.match.phase === 'warn';
     this.mesh.visible = true;
     this.mesh.material.opacity = warn ? Math.max(0, 0.55 - C.match.left / 10 * 0.55) * (0.6 + 0.4 * Math.sin(this.t * 6)) : 0.93;
@@ -4063,6 +4501,13 @@ const Items = {
   modelProtos: {},
   modelProto(name, size) {
     const key = name + '@' + size;
+    if (!this.modelProtos[key] && name === 'guitar_acoustic') {
+      const g = makeGuitar(false);
+      const sizeOfModel = new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());
+      const scale = size / sizeOfModel.x;
+      g.scale.setScalar(scale);
+      this.modelProtos[key] = Promise.resolve({ g, h: sizeOfModel.y * scale });
+    }
     if (!this.modelProtos[key] && name.startsWith('cupcake_')) this.modelProtos[key] = Promise.resolve(this.cupcake(name.slice(8), size));
     if (!this.modelProtos[key]) this.modelProtos[key] = Assets.get(name).then(({ scene: sc }) => {
       const d = C.MODEL_DIMS[name], s = size / Math.max(d.max[0] - d.min[0], d.max[2] - d.min[2]);
@@ -4534,7 +4979,10 @@ const Sfx = {
   samples: { reload: 'assets/sounds/reload.mp3', gunshot: 'assets/sounds/gunshot.mp3',
              splatWet: 'assets/sounds/splat_wet.mp3', splatLancer: 'assets/sounds/splat_lancer.mp3' },
   // laughs are cut into many short bits; each play picks one that wasn't heard recently, at a slightly different pitch
-  pools: { giggle: Array.from({ length: 16 }, (_, i) => 'assets/sounds/giggle_' + String(i + 1).padStart(2, '0') + '.mp3'),
+  pools: { balloon: [
+    'universfield-party-balloon-pop-323588', 'freesound_community-balloon-pop-93436',
+    'professionalsfx-balloon-pop-sound-effect-504628', 'universfield-balloon-burst-383750'
+  ].map(name => 'assets/sounds/' + name + '.mp3'), giggle: Array.from({ length: 16 }, (_, i) => 'assets/sounds/giggle_' + String(i + 1).padStart(2, '0') + '.mp3'),
            laugh: ['assets/sounds/laugh_1.mp3', 'assets/sounds/laugh_2.mp3', 'assets/sounds/laugh_3.mp3'] },
   recent: {}, lastAt: {},
   fromPool(pool, vol, minGap) {
@@ -4586,7 +5034,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyE') Game.interact();
   if (e.code === 'KeyQ') Game.drop();
   if (e.code === 'KeyL') Game.lock();
-  if (e.code === 'Enter' && !Net.role && Game.state === 'playing' && Player.f && !Player.f.alive && Game.mode !== 'practice') Game.showEnd();
+  if (e.code === 'Enter' && !Net.role && Game.state === 'playing' && Player.f && !Player.f.alive && Game.mode !== 'practice' && Game.mode !== 'keepy') Game.showEnd();
   if (e.code === 'KeyF') Game.engine();
   if (e.code === 'KeyV') Game.toggleCamera();
   if (e.code === 'KeyT') babyTantrum();
@@ -4639,7 +5087,7 @@ document.addEventListener('dblclick', e => e.preventDefault());
 // ======================================================= XBOX / GAMEPAD
 // Standard mapping (Xbox): 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 View, 9 Menu, 10 L3, 11 R3, 12-15 D-pad up/down/left/right
 const Pad = {
-  idx: null, prev: [], active: false, mx: 0, my: 0, lx: 0, ly: 0, lt: 0, rt: 0, sprint: false, crouch: false, brake: false, navT: 0, focus: -1, chipT: 0,
+  idx: null, prev: [], active: false, mx: 0, my: 0, lx: 0, ly: 0, lt: 0, rt: 0, sprint: false, crouch: false, brake: false, navT: 0, focus: null, menuFocus: new WeakMap(), chipT: 0,
   DEAD: 0.18,
   get() {
     try { const list = navigator.getGamepads ? navigator.getGamepads() : []; for (const g of list) if (g && g.connected && g.mapping !== 'xr-standard') return g; } catch (e) {}
@@ -4697,11 +5145,25 @@ const Pad = {
     const vis = el => el && !el.classList.contains('hidden') && el.offsetParent !== null;
     return [...document.querySelectorAll('button')].filter(x => vis(x) && !x.disabled && x.closest('#touch') === null);
   },
-  clearFocus() { for (const x of document.querySelectorAll('button.padFocus')) x.classList.remove('padFocus'); this.focus = -1; },
+  clearFocus() {
+    if (this.focus) this.focus.classList.remove('padFocus');
+    this.focus = null;
+  },
+  focusButton(button) {
+    if (button === this.focus) return;
+    this.clearFocus();
+    this.focus = button;
+    button.classList.add('padFocus');
+    const panel = button.closest('.overlay');
+    if (panel) this.menuFocus.set(panel, button);
+  },
   menuNav(b, down, dt) {
-    const list = this.buttons(); if (!list.length) return;
-    if (this.focus < 0 || this.focus >= list.length || !list[this.focus].classList.contains('padFocus')) {
-      this.clearFocus(); this.focus = 0; list[0].classList.add('padFocus');
+    const list = this.buttons();
+    if (!list.length) { this.clearFocus(); return; }
+    if (!list.includes(this.focus)) {
+      const panel = list[0].closest('.overlay');
+      const previous = panel && this.menuFocus.get(panel);
+      this.focusButton(list.includes(previous) ? previous : list[0]);
     }
     this.navT -= dt;
     const dirY = b[13] || this.ly > 0.5 ? 1 : b[12] || this.ly < -0.5 ? -1 : 0, dirX = b[15] || this.lx > 0.5 ? 1 : b[14] || this.lx < -0.5 ? -1 : 0;
@@ -4709,15 +5171,23 @@ const Pad = {
     if (!dir) this.navT = 0;
     else if (this.navT <= 0) {
       this.navT = 0.22;
-      list[this.focus].classList.remove('padFocus');
-      this.focus = (this.focus + dir + list.length) % list.length;
-      list[this.focus].classList.add('padFocus'); list[this.focus].scrollIntoView({ block: 'nearest' });
+      const next = (list.indexOf(this.focus) + dir + list.length) % list.length;
+      this.focusButton(list[next]);
+      this.focus.scrollIntoView({ block: 'nearest' });
     }
-    if (down(0)) { const el = list[this.focus]; this.clearFocus(); el.click(); }
-    if (down(1)) { const back = list.find(x => /back|resume|main menu/i.test(x.id + ' ' + x.textContent)); if (back) { this.clearFocus(); back.click(); } }
-    if (down(9) && Game.state === 'paused') { this.clearFocus(); Game.resume(); }
+    if (down(0)) this.focus.click();
+    else if (down(1)) {
+      const back = list.find(x => /back|resume|main menu/i.test(x.id + ' ' + x.textContent));
+      if (back) back.click();
+    }
+    if (down(9) && Game.state === 'paused' && !SkinPicker.pending) { this.clearFocus(); Game.resume(); }
   }
 };
+document.addEventListener('click', event => {
+  if (!Pad.active || !event.isTrusted || Game.state === 'playing') return;
+  const button = event.target.closest('button');
+  if (button && Pad.buttons().includes(button)) Pad.focusButton(button);
+}, true);
 window.addEventListener('gamepadconnected', () => Pad.chip('🎮 Controller found — press any button'));
 
 // ======================================================= FULLSCREEN
@@ -4871,15 +5341,20 @@ const Player = {
       return 0;
     }
     this.carInp = null;
+    if (f.alive && this.gs) {
+      this.gs = null; this.ghostF = null; this.deadClock = 0;
+      baby.tposed = false; ghostLook(baby, 1);
+    }
     if (!f.alive) {
       // knocked out: watch your body for 10 s, then get up as a see-through ghost who can wander but not touch anything
       this.deadClock += dt;
-      if (!this.gs && this.deadClock > GHOST_DELAY && Game.mode !== 'practice') {
-        this.gs = C.newPlayerState({ x: f.s.x, z: f.s.z }); this.gs.y = f.s.y;
+      if (!this.gs && (Game.mode === 'keepy' || this.deadClock > GHOST_DELAY) && Game.mode !== 'practice') {
+        this.gs = f.ghostState || C.newPlayerState({ x: f.s.x, z: f.s.z }); this.gs.y = f.s.y;
         if (C.firstOverlap(C.playerBox(this.gs))) { const sp = f.spawn || C.SPAWNS[0]; this.gs = C.newPlayerState({ x: sp.x, z: sp.z }); }
+        if (Game.mode === 'keepy') f.ghostState = this.gs;
         this.ghostF = { alive: true, down: 0, stun: 0, act: null, actT: 9, held: null, inCar: false, s: this.gs, pitch: 0 };
         baby.tposed = false; if (baby.active) play(baby.active, 'idle', 0.2);
-        UI.toast('👻 You rose as a ghost'); UI.msg('Wander around and watch — ghosts can\'t touch anything');
+        UI.toast('👻 You rose as a ghost'); UI.msg(Game.mode === 'keepy' ? 'Throw blocks at the balloon to earn a comeback' : 'Wander around and watch — ghosts can\'t touch anything');
       }
       if (!this.gs) { jumpPressed = false; return 0; }
       const g = this.gs, sy = Math.sin(Cam.yaw), cy = Math.cos(Cam.yaw);
@@ -4901,7 +5376,7 @@ const Player = {
     } else { this.wobY = 0; this.wobP = 0; }
     f.yaw = Cam.yaw; f.pitch = Cam.pitch;            // aim where the camera looks
     const stunned = f.down > 0 || f.root > 0, dazed = f.stun > 0;
-    f.s.speedMul = (f.sugar > 0 ? C.COMBAT.sugarSpeed : 1) * (f.id === C.match.it ? (C.match.mode === 'freeze' ? 1 : C.match.mode === 'tag' ? 1.1 : 1) : 1 * (f.zombie ? 0.84 : 1)) * (f.grab ? 0.55 : 1);
+    C.syncFighterMovement(f);
     const sy = Math.sin(Cam.yaw), cy = Math.cos(Cam.yaw);
     let dx = -sy * fw + cy * r, dz = -cy * fw - sy * r;
     const len = Math.hypot(dx, dz); if (len > 1) { dx /= len; dz /= len; }
@@ -5069,7 +5544,6 @@ function bindSettings() {
   $('sBob').checked = d.headBob; $('sBob').addEventListener('change', e => { d.headBob = e.target.checked; Settings.save(); });
   rng('sTouch', 'oTouch', 'touchSens', v => v.toFixed(2));
   $('sOutline').checked = d.outlines; $('sOutline').addEventListener('change', e => { d.outlines = e.target.checked; Settings.save(); });
-  $('sSkin').value = d.skin; $('sSkin').addEventListener('change', e => { d.skin = e.target.value; Settings.save(); if (d.skin !== 'random') setBabySkin(baby, d.skin); });
   rng('sBots', 'oBots', 'bots', v => v.toFixed(0));
   $('sAutoFull').checked = d.autoFull; $('sAutoFull').addEventListener('change', e => { d.autoFull = e.target.checked; Settings.save(); });
   $('sDebug').addEventListener('change', e => { if (e.target.checked !== Debug.on) Debug.toggle(); });
@@ -5107,8 +5581,8 @@ const Debug = {
 };
 
 // ======================================================= GAME STATE
-const CAUSE_ICON = { panHit: '🍳', panThrow: '🍳💨', guitarHit: '🎸', bookHit: '📕', bookThrow: '📕💨', duckHit: '🦆', duckThrow: '🦆💨', jarHit: '🍪', jarThrow: '🍪💨', spikes: '🪤', punch: '👊', kick: '🦶', blockHit: '🧱', blockThrow: '🧱💨', pistol: '🔫', shotgun: '💥', trap: '⚡', car: '🚗', lava: '🔥' };
-const CAUSE_TEXT = { panHit: 'a frying pan', panThrow: 'a flying frying pan', guitarHit: 'a guitar', bookHit: 'a big book', bookThrow: 'a flying book', duckHit: 'a rubber duck', duckThrow: 'a flying rubber duck', jarHit: 'a cookie jar', jarThrow: 'a flying cookie jar', spikes: 'a bear trap', punch: 'fists', kick: 'a kick', blockHit: 'a toy block', blockThrow: 'a thrown block', pistol: 'the pistol', shotgun: 'the shotgun', trap: 'a live wire', car: 'the car', lava: 'the lava' };
+const CAUSE_ICON = { panHit: '🍳', panThrow: '🍳💨', guitarHit: '🎸', bookHit: '📕', bookThrow: '📕💨', duckHit: '🦆', duckThrow: '🦆💨', jarHit: '🍪', jarThrow: '🍪💨', spikes: '🪤', punch: '👊', kick: '🦶', blockHit: '🧱', blockThrow: '🧱💨', pistol: '🔫', shotgun: '💥', trap: '⚡', car: '🚗', lava: '🔥', balloon: '🎈', keepy: '🎈' };
+const CAUSE_TEXT = { panHit: 'a frying pan', panThrow: 'a flying frying pan', guitarHit: 'a guitar', bookHit: 'a big book', bookThrow: 'a flying book', duckHit: 'a rubber duck', duckThrow: 'a flying rubber duck', jarHit: 'a cookie jar', jarThrow: 'a flying cookie jar', spikes: 'a bear trap', punch: 'fists', kick: 'a kick', blockHit: 'a toy block', blockThrow: 'a thrown block', pistol: 'the pistol', shotgun: 'the shotgun', trap: 'a live wire', car: 'the car', lava: 'the lava', balloon: 'a popped balloon', keepy: 'the balloon hitting the floor' };
 const Game = {
   state: 'menu', pausedAt: 0, target: null, mode: 'battle', endT: 0, endShown: false, place: 0,
   startMatch(mode) {
@@ -5148,12 +5622,13 @@ const Game = {
     Items.clear(); Traps.clear(); FX.clear();
     this.state = 'playing'; this.endT = 0; this.endShown = false; this.place = 0; Music.apply();
     $('feed').innerHTML = '';
+    SkinPicker.close(); hideMenuBabies();
     UI.hide('menu'); UI.hide('pause'); UI.hide('settings'); UI.hide('endScreen'); UI.show('hud');
     Touch.resetSticks(); Touch.crouch = false; Touch.brake = false; $('tCrouch').classList.remove('on');
     $('touch').classList.toggle('hidden', !touchMode);
     $('hint').style.opacity = 1; clearTimeout(this.hintTimer); this.hintTimer = setTimeout(() => { $('hint').style.opacity = 0; }, 11000);
-    UI.toast(this.mode === 'practice' ? 'Practice!' : 'Last baby standing!');
-    UI.msg(this.mode === 'practice' ? 'Beat up the dummies — they pop back up' : Net.role ? `${C.fighters.length} babies in this round — last one standing wins` : `${C.fighters.length - 1} bot babies are loose in the house`);
+    UI.toast(this.mode === 'keepy' ? '🎈 Keepy Uppy!' : this.mode === 'balloon' ? '🎈 Balloon Pop!' : this.mode === 'practice' ? 'Practice!' : 'Last baby standing!');
+    UI.msg(this.mode === 'keepy' ? 'Aim and bat the balloon upward. Last touch is safe if it hits the floor.' : this.mode === 'balloon' ? (touchMode ? 'Use THROW and aim above a baby' : 'Aim at a balloon and right-click to throw') : this.mode === 'practice' ? 'Beat up the dummies — they pop back up' : Net.role ? `${C.fighters.length} babies in this round — last one standing wins` : `${C.fighters.length - 1} bot babies are loose in the house`);
     if (touchMode) { if (Settings.data.autoFull) Fullscreen.enter(); }
     else if (!Pad.active) lockPointer();
     onResize();
@@ -5167,17 +5642,21 @@ const Game = {
   },
   resume() {
     setTimeout(() => Music.apply(), 0);
+    SkinPicker.close();
     this.state = 'playing'; UI.hide('pause'); UI.hide('settings');
     $('touch').classList.toggle('hidden', !touchMode);
     if (!touchMode && !Pad.active) lockPointer();
   },
   toMenu() {
     if (Net.role) Net.leave();
+    SkinPicker.close();
     this.state = 'menu'; if (isLocked()) document.exitPointerLock(); Music.apply();
+    baby.root.visible = baby.blob.visible = false;
+    chooseMenuBabies();
     UI.hide('pause'); UI.hide('hud'); UI.hide('settings'); UI.hide('touch'); UI.hide('endScreen'); UI.show('menu');
     for (const v of botViews) { v.root.visible = false; v.blob.visible = false; if (v.tag) v.tag.sp.visible = false; }
     C.fighters.length = 0; C.items.length = 0; C.traps.length = 0; C.projectiles.length = 0;
-    Items.clear(); Traps.clear(); FX.clear(); baby.root.scale.set(1, 1, 1);
+    Items.clear(); Traps.clear(); FX.clear(); baby.root.scale.set(1, 1, 1); ghostLook(baby, 1);
     C.resetWorld(); C.setupCar(); Sfx.setEngine(false, 0, 0);
     onResize();
   },
@@ -5201,6 +5680,11 @@ const Game = {
     return C.interactLabel(t);
   },
   interact() {
+    if (this.mode === 'keepy' && Player.f && !Player.f.alive && Player.gs) {
+      if (Net.role === 'client') Net.action('interact');
+      else C.keepyGhostPickup(Player.f);
+      return;
+    }
     if (Net.role === 'client') { Net.action('interact'); return; }
     if (Player.f && Player.f.grab) { C.releaseFurniture(Player.f); return; }
     this.doInteract(Player.f, this.target);
@@ -5253,7 +5737,7 @@ const Game = {
   attack(kind) {
     const f = Player.f;
 
-    if (this.state !== 'playing' || !f || !f.alive) return;
+    if (this.state !== 'playing' || !f || (!f.alive && (this.mode !== 'keepy' || !Player.gs))) return;
     if (f.inCar) { if (kind === 'primary') { Sfx.horn(); if (Net.role) Net.action('horn'); } return; }
     if (f.down > 0) return;
     if (Net.role === 'client') { Net.action(kind); return; }
@@ -5272,7 +5756,7 @@ const Game = {
     if (Net.role === 'client') { Net.action('lock'); return; }
     if (C.lockDoor(t.ref, f) === 'open') UI.msg('Close it first to lock it');
   },
-  drop() { const f = Player.f; if (f && !f.alive && Game.mode !== 'practice') { if (!Net.role && Player.gs) this.showEnd(); return; }
+  drop() { const f = Player.f; if (f && !f.alive && Game.mode !== 'practice') { if (!Net.role && Player.gs && Game.mode !== 'keepy') this.showEnd(); return; }
     if (f && f.grab) { if (Net.role === 'client') Net.action('interact'); else C.releaseFurniture(f); return; } if (this.state === 'playing' && f && f.held && !f.inCar) { if (Net.role === 'client') Net.action('drop'); else C.dropHeld(f); Sfx.thud(0.6); } },
   engine() { const f = Player.f; if (this.state === 'playing' && f && f.inCar) { if (Net.role === 'client') Net.action('engine'); else C.toggleEngine(f); } },
   feed(html) {
@@ -5322,9 +5806,9 @@ const Game = {
             this.place = C.fighters.filter(f => f.alive && f !== me).length + 1;
             this.killer = src && src !== me ? src.name : null; this.killCause = e.cause;
             if (this.mode !== 'practice') this.spectate(src && src !== me && src.alive ? src : null, true);
-            UI.toast('Knocked out!');
+            UI.toast(e.cause === 'balloon' ? '🎈 Your balloon popped!' : 'Knocked out!');
             if (this.mode === 'practice') UI.msg('Back up in 3 seconds…');
-            else UI.msg('You\'ll rise as a ghost in ' + GHOST_DELAY + ' seconds…');
+            else if (this.mode !== 'keepy') UI.msg('You\'ll rise as a ghost in ' + GHOST_DELAY + ' seconds…');
           } else if (src === me) UI.toast(tgt.name + ' is out!');
           if (me && !me.alive && tgt && tgt.id === this.specId && tgt !== me) {            // the baby you're watching went down: follow whoever got them
             const at = { x: tgt.s.x, z: tgt.s.z }, next = src && src !== tgt ? src : null;
@@ -5398,7 +5882,7 @@ const Game = {
         case 'over': this.endT = 2.5; this.won = !!(me && e.winner === me.id); this.winnerName = e.name; this.overText = e.text || ''; break;
         case 'tagged':
           if (tgt === me) { UI.toast("🏷️ You're IT!"); Sfx.giggle(1); Pad.rumble(250, 0.5); }
-          else if (src === me) { UI.toast('Tagged ' + tgt.name + '!'); Sfx.laugh(1); }
+          else if (src === me) { UI.toast('Tagged ' + tgt.name + '! Speed boost!'); Sfx.laugh(1); }
           else UI.msg(tgt.name + ' is IT');
           break;
         case 'zombified':
@@ -5414,6 +5898,25 @@ const Game = {
         case 'thawed':
           if (tgt === me) UI.toast('🔥 Thawed! Run!'); else if (e.src && byId(e.src) === me) UI.toast('You thawed ' + tgt.name + '!');
           if (tgt) Sfx.giggle(vol(tgt));
+          break;
+        case 'keepyHit': Sfx.thud(Math.max(0.15, Sfx.volAt(e.x, e.z))); break;
+        case 'keepyPop':
+          Sfx.fromPool('balloon', Math.max(0.35, Sfx.volAt(e.x, e.z)), 0);
+          FX.flash(e.x, e.y, e.z, 0xffcf62, 0.6, 0.25);
+          UI.toast(e.safe === me?.id ? '🎈 Last touch saved you!' : '🎈 The balloon hit the floor!');
+          break;
+        case 'keepyReturn':
+          if (tgt === me) {
+            Player.gs = null; Player.ghostF = null; Player.deadClock = 0;
+            this.specId = null; Cam.yaw = me.yaw; Cam.pitch = 0; ghostLook(baby, 1);
+          }
+          UI.toast(tgt === me ? '🎈 You’re back in!' : '🎈 ' + e.name + ' is back in!');
+          break;
+        case 'balloonPop':
+          Sfx.fromPool('balloon', Math.max(vol(tgt), src === me ? 1 : 0), 0);
+          FX.flash(e.x, e.y, e.z, 0xffcf62, 0.45, 0.18);
+          if (src === me) Pad.rumble(80, 0.15);
+          else if (tgt === me) Pad.rumble(180, 0.4);
           break;
         case 'lavaOn': UI.toast('🔥 THE FLOOR IS LAVA! 🔥'); Sfx.noise(0.8, 0.35, 500); Pad.rumble(400, 0.5); break;
         case 'lavaRise': UI.toast('🔥 The lava is rising!'); Sfx.noise(0.6, 0.3, 400); break;
@@ -5498,6 +6001,73 @@ const Game = {
 };
 
 // ======================================================= COMBAT HUD
+const HideMap = {
+  elapsed: 0,
+  update(dt) {
+    const me = Player.f, m = C.match;
+    const seeker = Game.state === 'playing' && m.mode === 'hide' && !m.over && me?.alive && me.id !== m.it &&
+      C.fighters.find(f => f.id === m.it && f.alive);
+    const panel = $('hideMap');
+    panel.classList.toggle('hidden', !seeker);
+    if (!seeker) { this.elapsed = 0; return; }
+    if (this.elapsed > 0) { this.elapsed -= dt; return; }
+    this.elapsed = 0.08;
+
+    const canvas = $('hideMapCanvas'), ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height, scale = w / 16;
+    const mapX = x => w / 2 + (x - me.s.x) * scale;
+    const mapZ = z => h / 2 + (z - me.s.z) * scale;
+    ctx.fillStyle = '#221c36';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#3a3350';
+    ctx.strokeStyle = '#807491';
+    ctx.lineWidth = 2;
+    for (const room of C.ROOMS) {
+      if (room.id === 'outdoor') continue;
+      for (const box of room.boxes || [room]) {
+        const x = mapX(box.x0 ?? box.minX), z = mapZ(box.z0 ?? box.minZ);
+        const width = mapX(box.x1 ?? box.maxX) - x, height = mapZ(box.z1 ?? box.maxZ) - z;
+        ctx.fillRect(x, z, width, height);
+        ctx.strokeRect(x, z, width, height);
+      }
+    }
+
+    // Keep the marker at the edge when the seeker is beyond the visible map.
+    const dx = seeker.s.x - me.s.x, dz = seeker.s.z - me.s.z;
+    const distance = Math.hypot(dx, dz);
+    const edge = Math.max(1, Math.abs(dx * scale) / (w / 2 - 15), Math.abs(dz * scale) / (h / 2 - 15));
+    const warning = distance < 3 ? '#ff7289' : distance < 7 ? '#ffd66d' : '#ece1ff';
+    const label = $('hideMapDistance');
+    const text = 'Seeker · ' + distance.toFixed(1) + ' m';
+    if (label.textContent !== text) label.textContent = text;
+    label.style.color = warning;
+
+    const seekerX = w / 2 + dx * scale / edge, seekerZ = h / 2 + dz * scale / edge;
+    ctx.save();
+    ctx.translate(seekerX, seekerZ);
+    ctx.fillStyle = warning;
+    if (edge > 1) {
+      ctx.rotate(Math.atan2(dx, -dz));
+      ctx.beginPath();
+      ctx.moveTo(0, -11); ctx.lineTo(9, 7); ctx.lineTo(-9, 7);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#221c36'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(-me.yaw);
+    ctx.beginPath();
+    ctx.moveTo(0, -11); ctx.lineTo(8, 7); ctx.lineTo(0, 4); ctx.lineTo(-8, 7);
+    ctx.closePath();
+    ctx.fillStyle = '#8cefef'; ctx.fill();
+    ctx.strokeStyle = '#221c36'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
+};
 const Hud = {
   hurtT: 0, markT: 0,
   hurt(n) { Pad.rumble(140 + n * 4, Math.min(1, 0.25 + n / 60), 0.4); this.hurtT = Math.min(1, 0.35 + n / 40); Sfx.tone(180, 0.12, 'sine', 0.15, 90); },
@@ -5526,7 +6096,13 @@ const Hud = {
     else if (h === 'spikes') held = '🪤 Armed bear trap' + (kb ? ' <span>run it into a baby · click to set it (on a rug = hidden) · Q drop</span>' : ' <span>run it into a baby · SET to put it down</span>');
     else held = '👊 Fists' + (kb ? ' <span>LMB punch · RMB kick</span>' : '');
     const spec = Game.specTarget();
-    if (!f.alive && Game.mode !== 'practice') held = Player.gs ? '👻 Ghost — just watching' + (kb && !Net.role ? ' <span>Enter skip to results</span>' : '') : `💀 Knocked out… rising as a ghost in <b>${Math.max(0, Math.ceil(GHOST_DELAY - Player.deadClock))}</b>`;
+    if (Game.mode === 'keepy') {
+      const bat = Pad.active ? 'RT to bat' : kb ? 'Left click to bat' : 'BAT';
+      const toss = Pad.active ? 'LT to throw' : kb ? 'Right click to throw' : 'THROW';
+      const pick = Pad.active ? 'X to pick up' : kb ? 'E to pick up' : 'USE to pick up';
+      if (!f.alive) held = '👻 Ghost · ' + (h ? C.ITEM_NAMES[h] + ' · ' + toss : pick + ' a throwable toy');
+      else held = '🎈 ' + bat + (h ? ' · ' + C.ITEM_NAMES[h] + ' · ' + toss : '');
+    } else if (!f.alive && Game.mode !== 'practice') held = Player.gs ? '👻 Ghost — just watching' + (kb && !Net.role ? ' <span>Enter skip to results</span>' : '') : `💀 Knocked out… rising as a ghost in <b>${Math.max(0, Math.ceil(GHOST_DELAY - Player.deadClock))}</b>`;
     if (f.hasKeys) held += ' · 🔑';
     if (f.sugar > 0) held += ` · 🍬 <b>${Math.ceil(f.sugar)}</b>`;
     if (f.strong > 0) held += ` · 🎂💪 <b>${Math.ceil(f.strong)}</b>`;
@@ -5541,18 +6117,29 @@ const Hud = {
     const clock = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
     let bar = '', cls = '';
     const itF = mm && C.fighters.find(x => x.id === M.it), amIt = itF === f;
-    if (mm === 'tag') { bar = amIt ? `🏷️ <b>You're IT!</b> Bonk someone · ${clock(M.left)}` : `🏷️ <b>${itF ? itF.name : '?'}</b> is IT · ${clock(M.left)}`; cls = amIt ? 'it' : ''; }
+    if (mm === 'tag') { bar = amIt ? `🏷️ <b>You're IT!</b> Bonk or throw a toy · ${clock(M.left)}` : `🏷️ <b>${itF ? itF.name : '?'}</b> is IT · ${clock(M.left)}`; if (f.tagEscape > 0) bar += ` · Speed boost ${Math.ceil(f.tagEscape)}s`; cls = amIt ? 'it' : ''; }
     else if (mm === 'freeze') {
       const run = C.fighters.filter(x => x.alive && x.id !== M.it), fr = run.filter(x => x.frozen).length;
       bar = amIt ? `🧊 <b>You're IT!</b> Freeze them all · ${fr}/${run.length} frozen · ${clock(M.left)}` : f.frozen ? `🧊 <b>FROZEN</b> — wait for a hug · ${clock(M.left)}` : `🧊 <b>${itF ? itF.name : '?'}</b> is IT · ${fr}/${run.length} frozen · ${clock(M.left)}`;
       cls = amIt ? 'it' : f.frozen ? 'cold' : '';
+    } else if (mm === 'keepy') {
+      const b = C.match.keepy, last = b && C.fighters.find(g => g.id === b.last);
+      const left = C.fighters.filter(g => g.alive).length;
+      const status = b?.delay > 0 ? 'New balloon in ' + Math.ceil(b.delay) :
+        last === f && f.alive ? 'You have last-touch protection' :
+        last ? 'Last touch: ' + last.name.replace(/</g, '&lt;') : 'Nobody has touched it';
+      bar = `🎈 <b>Keepy Uppy</b> · ${left} left · ${clock(M.left)} · ${status}`;
+      if (!f.alive) bar += ' · Throw a block and be last to touch for a comeback';
+    } else if (mm === 'balloon') {
+      const left = C.fighters.filter(x => x.alive).length;
+      bar = `🎈 <b>Balloon Pop</b> · ${left} left · ${clock(M.left)} · Throw toys at balloons`;
     } else if (mm === 'lava') {
       const up = C.fighters.filter(x => x.alive).length;
       bar = M.phase === 'warn' ? `🔥 The floor turns to <b>LAVA</b> in <b>${Math.ceil(M.left)}</b> — get up on something!` : `🔥 <b>Floor is Lava!</b> ${up} babies left · ${clock(M.left)} <span style="font-size:13px;opacity:.85">(punch & kick to shove)</span>`;
       cls = M.phase === 'warn' ? '' : 'it';
     } else if (mm === 'zombie') {
       const hum = C.fighters.filter(x => x.alive && !x.zombie).length, zs = C.fighters.filter(x => x.zombie).length;
-      bar = f.zombie ? `🧟 <b>You're a ZOMBIE!</b> Bonk the babies · ${hum} left · ${clock(M.left)}` : `🏃 <b>Survive!</b> ${zs} zombie${zs === 1 ? '' : 's'} · ${hum} babies left · ${clock(M.left)}`;
+      bar = f.zombie ? `🧟 <b>You're a ZOMBIE!</b> Infect with hits, toys, or traps · ${hum} left · ${clock(M.left)}` : `🏃 <b>Survive!</b> ${zs} zombie${zs === 1 ? '' : 's'} · ${hum} babies left · ${clock(M.left)}`;
       cls = f.zombie ? 'zomb' : '';
     } else if (mm === 'hide') {
       const hid = C.fighters.filter(x => x.alive && x.id !== M.it).length;
@@ -5572,8 +6159,8 @@ const Hud = {
     // touch buttons follow what's in your hands
     if (touchMode) {
       const inCar = f.inCar;
-      $('tHit').textContent = h === 'pistol' || h === 'shotgun' ? 'SHOOT' : C.MELEE[h] ? 'BONK' : h === 'spikes' ? (f.held.armed ? 'SET' : 'ARM') : 'PUNCH';
-      $('tKick').textContent = C.MELEE[h] ? (C.MELEE[h].thr ? 'THROW' : 'SMASH') : 'KICK';
+      $('tHit').textContent = Game.mode === 'keepy' ? 'BAT' : h === 'pistol' || h === 'shotgun' ? 'SHOOT' : C.MELEE[h] ? 'BONK' : h === 'spikes' ? (f.held.armed ? 'SET' : 'ARM') : 'PUNCH';
+      $('tKick').textContent = Game.mode === 'keepy' ? 'THROW' : C.MELEE[h] ? (C.MELEE[h].thr ? 'THROW' : 'SMASH') : 'KICK';
       $('tHit').classList.toggle('hidden', inCar); $('tKick').classList.toggle('hidden', inCar);
       $('tDrop').classList.toggle('hidden', inCar || !f.held);
       $('tStart').classList.toggle('hidden', !inCar);
@@ -5583,9 +6170,63 @@ const Hud = {
   }
 };
 
-$('btnPlay').onclick = () => { Sfx.init(); Game.startMatch(Settings.data.mode || 'battle'); };
+const SkinPicker = {
+  pending: null, selected: null, failed: new Set(),
+  choices: [...document.querySelectorAll('#skinPicker [data-skin]')],
+  open(panel, done, label = 'Play') {
+    if (this.pending) return;
+    this.pending = { panel, done };
+    this.selected = null;
+    $('skinConfirm').textContent = label;
+    this.refresh();
+    UI.hide(panel); UI.show('skinPicker');
+  },
+  refresh() {
+    for (const button of this.choices) {
+      const name = button.dataset.skin;
+      button.setAttribute('aria-pressed', String(name === this.selected));
+      button.disabled = this.failed.has(name);
+    }
+    const waiting = this.selected && !BabyGLTF[this.selected] && !this.failed.has(this.selected);
+    const failed = this.selected && this.failed.has(this.selected);
+    $('skinStatus').textContent = failed ? 'That baby couldn’t load. Choose another.' : waiting ? 'Loading baby…' : '';
+    $('skinStatus').classList.toggle('hidden', !waiting && !failed);
+    $('skinConfirm').disabled = !this.selected || !BabyGLTF[this.selected];
+  },
+  choose(name) {
+    if (!this.pending || this.failed.has(name)) return;
+    this.selected = name;
+    if (Game.state === 'menu') setBabySkin(menuBabies[0], name);
+    this.refresh();
+  },
+  close() {
+    if (!this.pending) return;
+    this.pending = null;
+    this.selected = null;
+    UI.hide('skinPicker');
+    setBabySkin(menuBabies[0], menuSkins[0]);
+  },
+  cancel() {
+    const panel = this.pending?.panel;
+    this.close();
+    if (panel) UI.show(panel);
+  },
+  confirm() {
+    if (!this.pending || !BabyGLTF[this.selected]) return;
+    const { panel, done } = this.pending;
+    Settings.data.skin = this.selected;
+    Settings.save();
+    this.close();
+    if (panel === 'lobby') UI.show(panel);
+    done();
+  }
+};
+for (const button of SkinPicker.choices) button.onclick = () => SkinPicker.choose(button.dataset.skin);
+$('skinConfirm').onclick = () => SkinPicker.confirm();
+$('skinBack').onclick = () => SkinPicker.cancel();
+$('btnPlay').onclick = () => { Sfx.init(); SkinPicker.open('menu', () => Game.startMatch(Settings.data.mode || 'battle')); };
 // game mode picker
-const MODE_ORDER = ['battle', 'lava', 'tag', 'zombie', 'hide'];
+const MODE_ORDER = ['battle', 'keepy', 'lava', 'balloon', 'tag', 'zombie', 'hide'];
 if (Settings.data.mode === 'freeze') Settings.data.mode = 'zombie';
 function showMode() { const m = C.MODES[Settings.data.mode] ? Settings.data.mode : 'battle'; $('modeName').textContent = C.MODES[m].name; $('modeBlurb').textContent = C.MODES[m].blurb; }
 function stepMode(d) { const i = MODE_ORDER.indexOf(Settings.data.mode); Settings.data.mode = MODE_ORDER[(Math.max(0, i) + d + MODE_ORDER.length) % MODE_ORDER.length]; Settings.save(); showMode(); }
@@ -5597,12 +6238,12 @@ function showBots() { const n = Settings.data.bots; $('botCount').textContent = 
 function stepBots(d) { Settings.data.bots = Math.max(1, Math.min(BOTS_MAX, (Settings.data.bots || 4) + d)); Settings.save(); showBots(); Sfx.click && Sfx.click(); }
 $('botMinus').onclick = () => stepBots(-1); $('botPlus').onclick = () => stepBots(1);
 showBots();
-$('btnPractice').onclick = () => { Sfx.init(); Game.startMatch('practice'); };
-$('btnAgain').onclick = () => { if (Net.role === 'host' && Net.lobbyMode === 'practice') Game.startMatch('practice'); else Game.startMatch(); };
+$('btnPractice').onclick = () => { Sfx.init(); SkinPicker.open('menu', () => Game.startMatch('practice')); };
+$('btnAgain').onclick = () => SkinPicker.open('endScreen', () => Game.startMatch(Net.role === 'host' && Net.lobbyMode === 'practice' ? 'practice' : undefined));
 $('btnEndMenu').onclick = () => Game.toMenu();
 $('btnSettings').onclick = () => { settingsReturn = 'menu'; UI.hide('menu'); UI.show('settings'); };
 $('btnResume').onclick = () => Game.resume();
-$('btnRestart').onclick = () => Game.startMatch();
+$('btnRestart').onclick = () => { if (Net.role !== 'client') SkinPicker.open('pause', () => Game.startMatch()); };
 $('btnPauseSettings').onclick = () => { settingsReturn = 'pause'; UI.hide('pause'); UI.show('settings'); };
 $('btnMainMenu').onclick = () => Game.toMenu();
 $('btnSettingsBack').onclick = () => { UI.hide('settings'); UI.show(settingsReturn); };
@@ -5718,6 +6359,11 @@ const Net = {
     if (!f) return;
     if (m.t === 'in') {
       this.inputs.set(f.id, m);
+      if (C.match.mode === 'keepy' && !f.alive && f.ghostState && (m.tp | 0) === (f.tp | 0) &&
+          Array.isArray(m.ghost) && m.ghost.length === 4 && m.ghost.every(Number.isFinite)) {
+        const [x, y, z, crouch] = m.ghost;
+        if (C.roomAt(x, z) && y >= -0.2 && y <= C.H) Object.assign(f.ghostState, { x, y, z, crouched: !!crouch });
+      }
       // guests are trusted with their own movement (friendly games): take their position unless we moved them
       if (f.alive && !f.inCar && (m.tp | 0) === (f.tp | 0) && m.s) {
         const s = f.s, q = m.s;
@@ -5729,8 +6375,8 @@ const Net = {
     } else if (m.t === 'act') {
       f.yaw = m.yaw; f.pitch = m.pitch;
       if (m.k === 'primary' || m.k === 'secondary') C.act(f, m.k);
-      else if (m.k === 'interact') { if (f.grab) C.releaseFurniture(f); else Game.doInteract(f, Game.findTarget(f, m.yaw)); }
-      else if (m.k === 'drop') C.dropHeld(f);
+      else if (m.k === 'interact') { if (!f.alive && C.match.mode === 'keepy') C.keepyGhostPickup(f); else if (f.grab) C.releaseFurniture(f); else Game.doInteract(f, Game.findTarget(f, m.yaw)); }
+      else if (m.k === 'drop' && f.alive) C.dropHeld(f);
       else if (m.k === 'lock') { const t = Game.findTarget(f, m.yaw); if (t && t.type === 'door') C.lockDoor(t.ref, f); }
       else if (m.k === 'engine') C.toggleEngine(f);
       else if (m.k === 'horn') this.extra({ type: 'horn', by: f.id });
@@ -5742,7 +6388,7 @@ const Net = {
     const p = this.players.get(id);
     this.conns.delete(id); this.players.delete(id);
     const f = C.fighters.find(x => x.remote === id);
-    if (f) { f.remote = null; if (f.alive) { C.kill(f, null, 'left'); } this.extra({ type: 'left', name: p ? p.name : f.name }); Game.feed(`${(p ? p.name : f.name).replace(/</g, '&lt;')} left the game`); }
+    if (f) { f.remote = null; f.disconnected = true; if (!f.alive && f.held) C.dropHeld(f); if (f.alive) { C.kill(f, null, 'left'); } this.extra({ type: 'left', name: p ? p.name : f.name }); Game.feed(`${(p ? p.name : f.name).replace(/</g, '&lt;')} left the game`); }
     this.lobbyChanged();
   },
   humans() { return [...this.players.values()].filter(p => this.conns.has(p.id)).map(p => ({ id: p.id, name: p.name, skin: p.skin })); },
@@ -5766,8 +6412,9 @@ const Net = {
     const car = C.car;
     return {
       f: C.fighters.map(f => ({ id: f.id, n: f.name, sk: f.skin, x: r3(f.s.x), y: r3(f.s.y), z: r3(f.s.z), vx: r3(f.s.vx), vz: r3(f.s.vz), yw: r3(f.yaw), pt: r3(f.pitch),
-        hp: f.hp, a: f.alive ? 1 : 0, st: r3(f.stun), dn: r3(f.down || 0), su: r3(f.sugar || 0), sg: r3(f.strong || 0), rt: r3(f.root || 0), fz: f.frozen ? 1 : 0, zb: f.zombie ? 1 : 0, hd: f.hiddenIn || '', it: r3(f.itT || 0), ac: f.act || '', at: r3(f.actT), h: f.held ? f.held.id : '', k: f.hasKeys ? 1 : 0, c: f.inCar ? 1 : 0,
+        hp: f.hp, a: f.alive ? 1 : 0, st: r3(f.stun), dn: r3(f.down || 0), su: r3(f.sugar || 0), te: r3(f.tagEscape || 0), sg: r3(f.strong || 0), rt: r3(f.root || 0), fz: f.frozen ? 1 : 0, zb: f.zombie ? 1 : 0, hd: f.hiddenIn || '', it: r3(f.itT || 0), ac: f.act || '', at: r3(f.actT), h: f.held ? f.held.id : '', k: f.hasKeys ? 1 : 0, c: f.inCar ? 1 : 0,
         g: f.s.grounded ? 1 : 0, cr: f.s.crouched ? 1 : 0, hg: f.s.hang ? [r3(f.s.hang.nx), r3(f.s.hang.nz)] : 0, cl: f.s.climb ? [r3(f.s.climb.nx), r3(f.s.climb.nz), r3(f.s.climb.ease || 0)] : 0,
+        gh: C.match.mode === 'keepy' && f.ghostState ? [r3(f.ghostState.x), r3(f.ghostState.y), r3(f.ghostState.z), f.ghostState.crouched ? 1 : 0] : null,
         kl: f.kills, ca: f.cause || '', tp: f.tp | 0, hu: f.human || f.isPlayer ? 1 : 0, du: f.dummy ? 1 : 0 })),
       i: C.items.map(i => ({ id: i.id, ty: i.type, x: r3(i.x), y: r3(i.y), z: r3(i.z), ho: i.holder || '', po: i.pocket ? 1 : 0, fl: i.flying ? 1 : 0, am: i.ammo, co: i.color, mo: i.model, pl: i.placed ? 1 : 0, lv: i.live ? 1 : 0, hi: i.hidden ? 1 : 0, ar: i.armed ? 1 : 0, ow: i.owner, sp: i.sprungT ? r3(i.sprungT) : 0 })),
       tr: C.traps.map(t => ({ o: C.OUTLETS.indexOf(t.outlet), lv: t.live ? 1 : 0, ow: t.owner, y: r3(t.y), it: t.item ? t.item.id : '' })),
@@ -5775,6 +6422,8 @@ const Net = {
       d: C.doors.map(d => d.target), dl: C.doors.map(d => d.locked ? 1 : 0), pm: C.PLACEMENTS.map((p, i) => p.moved ? [i, r3(p.x), r3(p.z)] : null).filter(Boolean), L: C.ROOMS.map(r => C.lights[r.id] ? 1 : 0), LB: C.ROOMS.map(r => C.brokenLights[r.id] ? 1 : 0),
       car: car.p ? [r3(car.x), r3(car.z), r3(car.yaw), r3(car.speed), car.started ? 1 : 0, car.driver ? car.driver.id : ''] : null,
       m: [C.match.mode, C.match.over ? 1 : 0, C.match.winner || '', C.match.it || '', C.match.phase || '', r3(C.match.left || 0), r3(C.match.lavaY || 0)],
+      keepy: C.match.keepy ? { x: r3(C.match.keepy.x), y: r3(C.match.keepy.y), z: r3(C.match.keepy.z),
+        last: C.match.keepy.last, delay: r3(C.match.keepy.delay), round: C.match.keepy.round } : null,
       ev
     };
   },
@@ -5861,12 +6510,21 @@ const Net = {
       const mine = f.id === me;
       f.name = q.n; f.hp = q.hp; f.kills = q.kl; f.cause = q.ca || null; f.dummy = !!q.du; f.human = !!q.hu; f.isPlayer = mine;
       if (!f.alive && q.a) f.deadT = 0;
-      f.alive = !!q.a; f.inCar = !!q.c; f.hasKeys = !!q.k;
-      f.stun = q.st; f.down = q.dn || 0; f.sugar = q.su || 0; f.strong = q.sg || 0; f.root = q.rt || 0; f.frozen = !!q.fz; f.zombie = !!q.zb; f.hiddenIn = q.hd || null; f.itT = q.it || 0;
+      f.alive = !!q.a;
+      if (q.gh && (!mine || !Player.gs)) {
+        f.ghostState ||= C.newPlayerState({ x: q.gh[0], z: q.gh[2] });
+        Object.assign(f.ghostState, { x: q.gh[0], y: q.gh[1], z: q.gh[2], crouched: !!q.gh[3] });
+      } else if (!q.gh) f.ghostState = null;
+      f.inCar = !!q.c; f.hasKeys = !!q.k;
+      f.stun = q.st; f.down = q.dn || 0; f.sugar = q.su || 0; f.tagEscape = q.te || 0; f.strong = q.sg || 0; f.root = q.rt || 0; f.frozen = !!q.fz; f.zombie = !!q.zb; f.hiddenIn = q.hd || null; f.itT = q.it || 0;
       if (q.ac !== (f.act || '') || q.at < f.actT - 0.05) { f.act = q.ac || null; f.actT = q.at; }
       if (mine) {
         // my own position is mine, unless the host moved me (car, respawn, new round)
-        if (first || f.inCar || !f.alive || (q.tp | 0) !== (f.tp | 0)) { Object.assign(f.s, { x: q.x, y: q.y, z: q.z, vx: 0, vy: 0, vz: 0, hang: null, climb: null }); f.tp = q.tp | 0; }
+        if (first || f.inCar || !f.alive || (q.tp | 0) !== (f.tp | 0)) {
+          Object.assign(f.s, { x: q.x, y: q.y, z: q.z, vx: 0, vy: 0, vz: 0, hang: null, climb: null });
+          if (first || (q.tp | 0) !== (f.tp | 0)) f.yaw = q.yw;
+          f.tp = q.tp | 0;
+        }
       } else {
         f.net = { x: q.x, y: q.y, z: q.z, vx: q.vx, vz: q.vz };
         if (first || Math.hypot(f.s.x - q.x, f.s.z - q.z) > 1.5) { f.s.x = q.x; f.s.y = q.y; f.s.z = q.z; }
@@ -5905,6 +6563,7 @@ const Net = {
       if (first) { car.x = S.car[0]; car.z = S.car[1]; car.yaw = S.car[2]; }
       car.speed = S.car[3]; car.started = !!S.car[4]; car.driver = C.fighters.find(f => f.id === S.car[5]) || null;
     }
+    C.match.keepy = S.keepy || null;
     C.match.mode = S.m[0]; C.match.over = !!S.m[1]; C.match.winner = S.m[2] || null; C.match.it = S.m[3] || null; C.match.phase = S.m[4] || null; C.match.left = S.m[5] || 0; C.match.lavaY = S.m[6] || 0;
   },
   clientTick(dt) {
@@ -5914,7 +6573,7 @@ const Net = {
     for (const f of C.fighters) {
       if (f.stun > 0) f.stun = Math.max(0, f.stun - dt);
       if (f.down > 0) f.down = Math.max(0, f.down - dt);
-      for (const k of ['sugar', 'strong', 'root']) if (f[k] > 0) f[k] = Math.max(0, f[k] - dt);
+      for (const k of ['sugar', 'strong', 'root', 'tagEscape']) if (f[k] > 0) f[k] = Math.max(0, f[k] - dt);
       if (f === C.fighters[0]) for (const it of C.items) if (it.placed && !it.live) it.sprungT = (it.sprungT || 0) + dt;   // smooth the snap between snapshots
       f.actT += dt; if (!f.alive) f.deadT += dt;
       if (f === me || !f.net || f.net.x == null) continue;
@@ -5934,6 +6593,7 @@ const Net = {
     this.host.send({ t: 'in', tp: me.tp | 0, yaw: r3(Cam.yaw), pitch: r3(Cam.pitch),
       s: { x: r3(s.x), y: r3(s.y), z: r3(s.z), vx: r3(s.vx), vy: r3(s.vy), vz: r3(s.vz), g: s.grounded ? 1 : 0, c: s.crouched ? 1 : 0,
            hg: s.hang ? [s.hang.nx, s.hang.nz] : 0, cl: s.climb ? [s.climb.nx, s.climb.nz, r3(s.climb.ease || 0)] : 0 },
+      ghost: C.match.mode === 'keepy' && Player.gs ? [r3(Player.gs.x), r3(Player.gs.y), r3(Player.gs.z), Player.gs.crouched ? 1 : 0] : null,
       car: ci ? [ci.throttle, ci.steer, ci.brake ? 1 : 0] : null });
   },
   action(k) { if (this.host && this.host.open) this.host.send({ t: 'act', k, yaw: r3(Cam.yaw), pitch: r3(Cam.pitch) }); },
@@ -5958,16 +6618,18 @@ const Net = {
 try { $('netName').value = localStorage.getItem('bbc_name') || ''; } catch (e) {}
 $('btnOnline').onclick = () => { UI.hide('menu'); UI.show('lobby'); if (!Net.role) Net.showStart(); };
 $('btnHost').onclick = () => { Sfx.init(); Net.hostGame(); };
-$('btnJoin').onclick = () => { Sfx.init(); Net.joinGame(); };
-$('joinCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') Net.joinGame(); });
+$('btnJoin').onclick = () => { Sfx.init(); SkinPicker.open('lobby', () => Net.joinGame(), 'Join game'); };
+$('joinCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') $('btnJoin').click(); });
 $('netName').addEventListener('keydown', e => e.stopPropagation());
 $('btnCopyCode').onclick = () => { try { navigator.clipboard.writeText(Net.code); $('btnCopyCode').textContent = 'Copied!'; setTimeout(() => { $('btnCopyCode').textContent = 'Copy'; }, 1200); } catch (e) {} };
 $('netMode').onchange = e => { Net.lobbyMode = e.target.value; Net.noBots = e.target.value === 'humans'; };
 $('btnNetStart').onclick = () => {
   if (Net.role !== 'host') return;
   if (!Net.humans().length && !confirmSolo()) return;
-  UI.hide('lobby');
-  Game.startMatch(Net.lobbyMode === 'practice' ? 'practice' : (Settings.data.mode || 'battle'));
+  SkinPicker.open('lobby', () => {
+    UI.hide('lobby');
+    Game.startMatch(Net.lobbyMode === 'practice' ? 'practice' : (Settings.data.mode || 'battle'));
+  }, 'Start match');
 };
 function confirmSolo() { Net.status('Nobody has joined yet — starting anyway with bots.'); return true; }
 $('btnLobbyBack').onclick = () => { Net.leave(); UI.hide('lobby'); UI.show('menu'); Net.status(''); };
@@ -5982,6 +6644,12 @@ document.querySelectorAll('button').forEach(b => b.addEventListener('mouseenter'
 // (Re)build every scene object of the current house from CORE data. Called at boot and after a map import.
 function rebuildWorld() {
   World.gen++;
+  if (Lava.mesh) {
+    scene.remove(Lava.mesh);
+    Lava.mesh.geometry.dispose();
+    Lava.mesh.material.dispose();
+    Lava.mesh = null;
+  }
   if (World.root) {
     scene.remove(World.root);
     World.root.traverse(o => { if (o.isMesh && o.userData.ownGeo) o.geometry.dispose(); });
@@ -6006,13 +6674,24 @@ function rebuildWorld() {
 }
 // Where the menu camera and the demo baby stand for the current house.
 function menuView() {
-  if (C.mapState.source === 'default') return { cam: [11.6, 0.34, 3.6], yaw: Math.PI / 2 + 0.12, baby: [10.75, 4.35], babyYaw: Math.PI / 2 + 0.35 };
+  if (C.mapState.source === 'default') return {
+    cam: [11.6, 0.34, 3.6], yaw: Math.PI / 2 + 0.12,
+    actors: [
+      { x: 10.75, y: 0, z: 4.35, yaw: Math.PI / 2 + 0.35 },
+      { x: 10.30, y: 0.44, z: 2.65, yaw: 0.95 }
+    ]
+  };
   const r = C.ROOMS.slice().sort((a, b) => (b.x1 - b.x0) * (b.z1 - b.z0) - (a.x1 - a.x0) * (a.z1 - a.z0))[0];
   const bx = (r.x0 + r.x1) / 2, bz = (r.z0 + r.z1) / 2, wide = r.x1 - r.x0 > r.z1 - r.z0;
   const cx = wide ? Math.min(r.x1 - 0.4, bx + 1.3) : bx, cz = wide ? bz : Math.min(r.z1 - 0.4, bz + 1.3);
-  return { cam: [cx, 0.36, cz], yaw: Math.atan2(-(bx - cx), -(bz - cz)), baby: [bx, bz], babyYaw: Math.atan2(cx - bx, cz - bz) };
+  const yaw = Math.atan2(cx - bx, cz - bz);
+  const actors = [{ x: bx, y: Math.max(0, C.groundHeightBelow(bx, bz, 0.85)), z: bz, yaw }];
+  const x = bx - Math.cos(yaw) * 0.65, z = bz + Math.sin(yaw) * 0.65;
+  const y = Math.max(0, C.groundHeightBelow(x, z, 0.85));
+  if (C.roomAt(x, z) === r && !C.firstOverlap(C.playerBox({ x, y: y + 0.001, z, height: C.PLAYER.height }))) actors.push({ x, y, z, yaw });
+  return { cam: [cx, 0.36, cz], yaw, actors };
 }
-loadBabySkins(); Items.init();
+chooseMenuBabies(); loadBabySkins(); Items.init();
 if (!MapIO.restoreLast()) rebuildWorld();      // remembers the last imported house
 Debug.selftest = C.selfTest();
 console.log('[BBC] self-test\n' + Debug.selftest.lines.join('\n'));
@@ -6020,26 +6699,105 @@ window.BBC = { CORE: C, Game, Player, Cam, scene, renderer, MapIO, rebuildWorld,
 
 const clock = new THREE.Clock();
 let menuT = 0;
+const BalloonViews = {
+  model: null, loading: false,
+  update() {
+    const shared = Game.state !== 'menu' && C.match.mode === 'keepy' && C.match.keepy;
+    const active = Game.state !== 'menu' && (C.match.mode === 'lava' || C.match.mode === 'balloon');
+    if (this.shared) this.shared.visible = false;
+    for (const v of babyViews) if (v.balloon) v.balloon.visible = false;
+    if (!active && !shared) return;
+    if (!this.loading) {
+      this.loading = true;
+      Assets.get('air_balloons').then(({ scene: model }) => {
+        model.updateMatrixWorld(true);
+        const mesh = model.getObjectByName('Object_5');
+        if (!mesh?.isMesh) return;
+        const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
+        geometry.computeBoundingBox();
+        const center = geometry.boundingBox.getCenter(new THREE.Vector3());
+        const size = geometry.boundingBox.getSize(new THREE.Vector3());
+        const diameter = C.BALLOON_RADIUS * 2;
+        geometry.translate(-center.x, -center.y, -center.z);
+        geometry.scale(diameter / size.x, diameter / size.y, diameter / size.z);
+        this.model = new THREE.Mesh(geometry, mesh.material);
+      }).catch(() => {});
+    }
+    if (shared) {
+      if (!this.shared) {
+        this.shared = new THREE.Group();
+        this.shared.add(new THREE.Mesh(new THREE.SphereGeometry(C.KEEPY_RADIUS, 24, 18),
+          new THREE.MeshStandardMaterial({ color: 0xf14368, emissive: 0x4a0b1a, roughness: 0.32 })));
+        const string = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, -C.KEEPY_RADIUS, 0), new THREE.Vector3(0.035, -0.32, 0), new THREE.Vector3(-0.015, -0.43, 0)
+        ]), new THREE.LineBasicMaterial({ color: 0xf0dcb9 }));
+        this.shared.add(string);
+        scene.add(this.shared);
+      }
+      if (this.model && !this.sharedModel) {
+        this.shared.children[0].visible = false;
+        this.sharedModel = this.model.clone();
+        this.sharedModel.scale.setScalar(C.KEEPY_RADIUS / C.BALLOON_RADIUS);
+        this.shared.add(this.sharedModel);
+      }
+      if (this.sharedRound !== shared.round || !Net.role || Net.role === 'host') {
+        this.shared.position.set(shared.x, shared.y, shared.z);
+      } else {
+        const p = this.shared.position;
+        p.set(p.x + (shared.x - p.x) * 0.25, p.y + (shared.y - p.y) * 0.25, p.z + (shared.z - p.z) * 0.25);
+      }
+      this.sharedRound = shared.round;
+      this.shared.visible = !C.match.over;
+      this.shared.scale.setScalar(shared.delay > 0 ? 0.78 + 0.07 * Math.sin(performance.now() * 0.012) : 1);
+      return;
+    }
+    for (const f of C.fighters) {
+      if (!f.alive || f.inCar || !f.view) continue;
+      const v = f.view;
+      if (!v.balloon) {
+        v.balloon = new THREE.Group();
+        v.balloon.add(new THREE.Mesh(new THREE.SphereGeometry(C.BALLOON_RADIUS, 16, 12), new THREE.MeshStandardMaterial({ color: 0xff506e })));
+        const string = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, -C.BALLOON_RADIUS, 0), new THREE.Vector3(0, -0.38, 0)
+        ]), new THREE.LineBasicMaterial({ color: 0xf0dcb9 }));
+        v.balloon.add(string);
+        scene.add(v.balloon);
+      }
+      if (this.model && !v.balloonLoaded) {
+        v.balloon.children[0].visible = false;
+        v.balloon.add(this.model.clone());
+        v.balloonLoaded = true;
+      }
+      const p = C.balloonCenter(f);
+      v.balloon.position.set(p.x, p.y, p.z);
+      v.balloon.visible = true;
+    }
+  }
+};
 function updateFighterViews(dt, playerSpeed) {
   const me = Player.f;
   for (const f of C.fighters) {
     const v = f.view; if (!v) continue;
     const isMe = f === me;
-    if (isMe && !f.alive && Player.gs) {               // my ghost: drawn where it walks, see-through, normal moves
-      const g = Player.gs;
+    const ghost = !f.alive && (isMe ? Player.gs : C.match.mode === 'keepy' && f.ghostState);
+    if (ghost) {
+      const g = ghost;
+      if (!isMe) { v.root.visible = true; v.root.rotation.y = f.yaw + Math.PI; }
+      if (v.tag) v.tag.sp.visible = false;
       v.root.position.set(g.x, g.y, g.z); v.root.scale.set(1, 1, 1);
-      if (Cam.mode === 'fp') v.root.rotation.y = Cam.yaw + Math.PI;
-      else if (playerSpeed > 0.08) { let d = Math.atan2(g.vx, g.vz) - v.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); v.root.rotation.y += d * Math.min(1, dt * 12); }
-      animateBaby(v, dt, g.grounded, g.crouched, playerSpeed, g, Player.ghostF);
+      if (isMe && Cam.mode === 'fp') v.root.rotation.y = Cam.yaw + Math.PI;
+      else if (isMe && playerSpeed > 0.08) { let d = Math.atan2(g.vx, g.vz) - v.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); v.root.rotation.y += d * Math.min(1, dt * 12); }
+      animateBaby(v, dt, g.grounded, g.crouched, isMe ? playerSpeed : 0, g, isMe ? Player.ghostF : f);
       tintBaby(v, Math.max(0.8, lightAt(g.x, g.z)));
-      ghostLook(v, 0.22); v.blob.visible = false;
+      ghostLook(v, 0.07); v.blob.visible = false;
       continue;
     }
     const s = f.s;
+    if (f.alive && v.ghostA < 1) { ghostLook(v, 1); v.tposed = false; }
     if (!f.alive && f.deadT > 30) {                    // bodies left lying around: fade, go stiff and float up through the ceiling
       const k = f.deadT - 30;
       if (!v.tposed) { v.tposed = true; if (v.active) { v.active.mixer.stopAllAction(); v.active.group.traverse(o => { if (o.isSkinnedMesh) o.skeleton.pose(); }); } v.pitch.position.set(0, 0, 0); v.pitch.rotation.set(0, 0, 0); }
-      ghostLook(v, Math.max(0.15, 1 - k * 0.45));
+      ghostLook(v, Math.max(0.07, 1 - k * 0.55));
       const rise = Math.min(0.15, k * 0.15) + Math.max(0, k - 1.5) * 0.5;
       v.root.position.set(s.x, s.y + rise, s.z); v.root.scale.set(1, 1, 1);
       v.root.visible = rise < 3.2 && !(isMe && Player.gs); v.blob.visible = false;
@@ -6107,7 +6865,11 @@ function tick(fixedDt) {
       Net.clientTick(dt);                       // send my moves, smooth everyone else, play the host's events
     } else {
       for (const f of C.fighters) {
-        if (f.isPlayer || !f.alive || f.inCar || f.remote) continue;
+        if (f.isPlayer || f.inCar || f.remote) continue;
+        if (!f.alive) {
+          if (C.match.mode === 'keepy' && f.bot) C.updateKeepyBotGhost(f, dt);
+          continue;
+        }
         C.stepPlayer(f.s, C.botThink(f, dt), dt);
       }
       const drv = C.car.driver;
@@ -6134,16 +6896,23 @@ function tick(fixedDt) {
   } else if (Game.state === 'menu') {
     menuT += dt;
     const mv = World.menu;
-    camera.position.set(mv.cam[0], mv.cam[1], mv.cam[2] + Math.sin(menuT * 0.2) * 0.25);
-    camera.rotation.set(0.08, mv.yaw + Math.sin(menuT * 0.15) * 0.3, 0);
-    baby.root.visible = true; baby.blob.visible = true;
-    baby.root.position.set(mv.baby[0], 0, mv.baby[1]); baby.root.rotation.y = mv.babyYaw;
-    if (Math.floor(menuT / 9) !== Math.floor((menuT - dt) / 9)) babyTantrum(Math.floor(menuT / 9) % 2 ? 'dance' : 'tantrum');   // a little tantrum (or a dance) now and then
-    animateBaby(baby, dt, true, false, 0);
-    baby.blob.position.set(mv.baby[0], 0.004, mv.baby[1]);
-    tintBaby(baby, 1);
+    camera.position.set(mv.cam[0], mv.cam[1], mv.cam[2] + Math.sin(menuT * 0.2) * 0.10);
+    camera.rotation.set(0.08, mv.yaw + Math.sin(menuT * 0.15) * 0.10, 0);
+    for (const [i, v] of menuBabies.entries()) {
+      const actor = mv.actors[i];
+      const ready = !!(actor && v.active);
+      v.root.visible = v.blob.visible = ready;
+      if (!ready) continue;
+      v.root.position.set(actor.x, actor.y, actor.z);
+      v.root.rotation.y = actor.yaw;
+      v.blob.position.set(actor.x, actor.y + 0.004, actor.z);
+      animateBaby(v, dt, true, false, 0);
+      tintBaby(v, 1);
+    }
     CarView.update(dt);
   } else if (Game.state === 'paused') Sfx.setEngine(false, 0, 0);
+  BalloonViews.update();
+  HideMap.update(dt);
   if (Net.role && Game.state === 'menu') Net.menuTick && Net.menuTick(dt);
   syncDoorViews(); syncSwitchViews();
   UI.update(dt);
