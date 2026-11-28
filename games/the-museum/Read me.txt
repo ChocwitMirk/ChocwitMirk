@@ -1,0 +1,27 @@
+EYEWITNESS MUSEUM
+
+Extract this folder and open Eyewitness Museum.html in a current Chrome or
+Edge browser. Keep the HTML, JavaScript, and assets together. The museum
+runs locally and does not require an internet connection.
+
+Click the scene to look around. Use W A S D to walk, Shift to run, and Esc
+to release the mouse. Use M for the map or choose a gallery from the menu.
+F switches between walking and flight. In flight, Space rises and C descends.
+
+Use Aquarium to watch four tanks up close. Next Tank changes the view.
+Hide Fact lets you focus on the tanks. Filtered Flute plays throughout the
+museum. Use Music to mute it. Return to Museum takes you back to your
+previous position.
+
+The original museum and its T. rex dome are the base scene. This build
+uses the supplied tiger, macaw, biplane, crocodile, elephant, sports car,
+eagle, Triceratops, animated Shepherd, and four fish models. The legacy
+pheasant and small props remain where matching source meshes were unavailable.
+
+XBOX CONTROLLER
+Press a controller button to wake it, then press A on the title screen.
+Left stick walks, right stick looks, and pressing the left stick runs.
+Look toward an exhibit marker and press A to read its discovery. B returns
+to the museum. With a keyboard, use E to discover and Escape to close.
+View opens the map. Menu opens help. In the aquarium, A changes tanks,
+X toggles the fact, Y toggles music, and B returns to the museum.
